@@ -1,0 +1,65 @@
+---
+title: "knfi"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{knfi}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r loaddata, eval = dir.exists("D:/NFI/NFI5/")}
+library(knfi)
+
+# Load tree and CWD data for all districts
+nfi5_data <- read_nfi("D:/NFI/NFI5", district = NULL, tables = c("tree", "cwd"))
+
+# Applying hierarchical filtering to select only privately owned forest subplots.
+# Ensures all child tables' subplots match the filtered plot table's subplots.
+nfi5_data <- filter_nfi(nfi5_data, c("plot$OWN_CD == '5'"), hier = TRUE)
+
+# Switch column names from English to original Korean names
+nfi5_data_kor <- switchcol_nfi(nfi5_data)
+
+```
+
+
+```{r calculate}
+library(knfi)
+
+data("nfi_donghae")
+
+# calculates comprehensive descriptive statistics for study area
+summary_stats <- summary_nfi(nfi_donghae)
+
+# Calculate importance values using genus
+importance_genus <- iv_nfi(nfi_donghae, sp = "GENUS")
+
+# Calculate tree diversity indices using basal area
+diversity_tree_ba <- diversity_nfi(nfi_donghae, sp = "SP", table = "tree", basal = TRUE)
+
+# Calculate biomass by administrative district
+biomass_district <- biomass_nfi(nfi_donghae, plotgrp = "SGG")
+
+# Calculate CWD biomass grouped by administrative district and decay class
+cwd_grpby <- cwd_biomass_nfi(nfi_donghae, plotgrp = "SGG", treegrp = "DECAY")
+
+# Create a bar plot of importance values at 5-year intervals
+tsvis_iv_bar <- tsvis_nfi(nfi_donghae, y = "iv", output = "bar", isannual = FALSE)
+
+# Generate a line plot of carbon biomass over time
+tsvis_bm_line <- tsvis_nfi(nfi_donghae, y = "biomass", 
+                            bm_type = "carbon", output = "line")
+
+# # Create a map of volume at the sido level
+# tsvis_bm_map <- tsvis_nfi(nfi_donghae, admin = "sido", 
+#                            y = "biomass", bm_type = "volume", output = "map")
+                           
+
+```

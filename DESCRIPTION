@@ -1,0 +1,47 @@
+Package: knfi
+Title: Analysis of Korean National Forest Inventory DB
+Version: 1.0.0
+Maintainer: Sinyoung Park <youngsin0306@kookmin.ac.kr>
+Authors@R: 
+  c(person(given = "Sinyoung", family = "Park", role = c("aut", "cre"), email = "youngsin0306@kookmin.ac.kr", comment = c(ORCID = "0000-0003-3658-0935")),
+    person(given = "Wonhee", family = "Cho", role = c("aut", "ctb"), email = "wcho@kongju.ac.kr", comment = c(ORCID = "0000-0002-9598-6188")),
+    person(given = "Inyoo", family = "Kim", role = c("aut", "ctb"), email = "inri123@kookmin.ac.kr", comment = c(ORCID = "0000-0002-7709-8224")),
+    person(given = "Wontaek", family = "Lim", role = c("aut", "ctb"), email = "lwt0909@kookmin.ac.kr", comment = c(ORCID = "0000-0002-5872-1121")),
+    person(given = "Dongwook W.",family = "Ko", role = c("aut","ths"), email = "dwko@kookmin.ac.kr", comment = c(ORCID = "0000-0002-6944-0261")))
+Description: Understanding the current status of forest resources is essential for monitoring changes in the forest ecosystem and producing related statistics. National Forest Inventory (NFI) surveys about 4,000 sample plots nationwide every five years and records 70 items, including forest surveys, forest resource surveys, and forest vegetation surveys. Many researchers are using NFI as primary data for research when estimating biomass or analyzing the importance value of each species in the time and space suitable for the research purpose. However, the accumulation of various forest survey data across the country limits the use of vast data. Therefore, this study developed an algorithm that efficiently processes vast amounts of NFI data in time and space using the statistical analysis software R (version 4.1.1). The developed algorithm first reconstructs NFI in time and space according to the researcher's purpose and performs integrity verification to maintain data quality. Subsequently, summary statistics, biodiversity, importance value, and biomass are analyzed using the verified data. Finally, visualizing the analysis results allows spatio-temporal access to forest ecosystem changes. 
+License: GPL-3 + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Additional_repositories: url::https://SYOUNG9836.github.io/drat
+URL: https://github.com/SYOUNG9836/knfi, https://syoung9836.github.io/knfi/
+BugReports: https://github.com/SYOUNG9836/knfi/issues
+Imports:
+    dplyr,
+    magrittr,
+    readxl,
+    stringr,
+    vegan,
+    tidyr,
+    BiodiversityR,
+    data.table,
+    sf,
+    plotrix,
+    rlang,
+    cellranger,
+    stats,
+    broom,
+    ggplot2,
+    sp,
+    cowplot,
+    ggpubr,
+    drat
+Depends: 
+    R (>= 3.6)
+Suggests: 
+    kadmin,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+Language: en-US
