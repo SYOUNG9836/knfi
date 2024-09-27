@@ -120,14 +120,12 @@ bm_df <- function(data){
 #' 
 #' # Basic usage
 #' biomass <- biomass_nfi(nfi_donghae)
-#'
-#' \donttest{
+#' 
 #' # Calculate biomass by administrative district
 #' district_biomass <- biomass_nfi(nfi_donghae, plotgrp = "SGG")
 #' 
 #' # Calculate biomass for each plot
 #' plot_biomass <- biomass_nfi(nfi_donghae, byplot = TRUE)
-#' }
 #' 
 #' @references 
 #' Son, Y., Kim, R., Lee, K., Pyo, J., Kim, S., Hwang, J., Lee, S., & Park, H. (2014). Carbon emission factors and biomass allometric equations by species in Korea. Korea Forest Research Institute.

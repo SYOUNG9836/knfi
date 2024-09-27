@@ -71,13 +71,11 @@ data("nfi_donghae")
 # Basic usage
 biomass <- biomass_nfi(nfi_donghae)
 
-\donttest{
 # Calculate biomass by administrative district
 district_biomass <- biomass_nfi(nfi_donghae, plotgrp = "SGG")
 
 # Calculate biomass for each plot
 plot_biomass <- biomass_nfi(nfi_donghae, byplot = TRUE)
-}
 
 }
 \references{

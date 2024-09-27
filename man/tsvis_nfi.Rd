@@ -69,9 +69,6 @@ Use \verb{drat::addRepo("SYOUNG9836") install.packages("kadmin")} or \code{remot
 
 data("nfi_donghae")
 
-
-\donttest{
-
 # Visualize importance values as a table
 tsvis_iv <- tsvis_nfi(nfi_donghae, y = "iv", output = "table")
 
@@ -81,10 +78,8 @@ tsvis_iv_bar <- tsvis_nfi(nfi_donghae, y = "iv", output = "bar", isannual = FALS
 # Generate a line plot of carbon biomass over time, grouped by age class
 tsvis_bm_line <- tsvis_nfi(nfi_donghae, y = "biomass", 
                             bm_type = "carbon", output = "line", plotgrp = "AGE_CLS")
-
-}
-
-\dontrun{
+                            
+\donttest{
 # Create a map of volume at the sido level
 tsvis_bm_map <- tsvis_nfi(nfi_donghae, admin = "sido", 
                            y = "biomass", bm_type = "volume", output = "map")

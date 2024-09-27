@@ -1,6 +1,6 @@
 
 
-# <a href="https://syoung9836.github.io/knfi/" style="float: right; margin-right: 110px; margin-top: -15px; "><img src="man/figures/logo.png" align="right" alt="alt text" width="93" /></a>   knfi: Analysis of Korean National Forest Inventory DB 
+# <a href="https://syoung9836.github.io/knfi/" style="float: right; margin-right: 110px; margin-top: -15px; "><img src="man/figures/logo.png" align="right" alt="alt text" width="93" /></a>   knfi: Analysis of Korean National Forest Inventory database 
 
 <!-- badges: start -->
 

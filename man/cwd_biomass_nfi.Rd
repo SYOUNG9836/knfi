@@ -61,13 +61,11 @@ data("nfi_donghae")
 # Basic usage
 cwd <- cwd_biomass_nfi(nfi_donghae)
 
-\donttest{
 # Calculate CWD biomass grouped by administrative district and decay class
 cwd_grp <- cwd_biomass_nfi(nfi_donghae, plotgrp = "SGG", treegrp = "DECAY")
 
 # Calculate CWD biomass for each plot
 plot_biomass <- cwd_biomass_nfi(nfi_donghae, byplot = TRUE)
-}
 
 }
 \references{

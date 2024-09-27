@@ -35,10 +35,8 @@
 #' # Calculate importance values without frequency
 #' importance <- iv_nfi(nfi_donghae, sp = "SP", frequency = FALSE)
 #' 
-#' \donttest{
 #' # Calculate importance values using genus
 #' genus_importance <- iv_nfi(nfi_donghae, sp = "GENUS")
-#' }
 #' 
 #' @seealso
 #' \code{\link[BiodiversityR]{importancevalue}} for calculating the importance values.

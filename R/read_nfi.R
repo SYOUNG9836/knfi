@@ -45,7 +45,7 @@
 #' @return A `data.frame`; the processed NFI data, structured for easy analysis. 
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'  # Load tree and CWD data for all districts
 #'  nfi5_data <- read_nfi("D:/NFI/NFI5", district = NULL, tables = c("tree", "cwd"))
 #' }

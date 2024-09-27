@@ -42,10 +42,8 @@
 #' # Calculate tree diversity indices using basal area
 #' tree_ba_diversity <- diversity_nfi(nfi_donghae, sp = "SP", table = "tree", basal = TRUE)
 #' 
-#' \donttest{ 
 #' # Calculate tree diversity indices using number of individuals
 #' tree_indi_diversity <- diversity_nfi(nfi_donghae, sp = "SP", table = "tree", basal = FALSE)
-#' }
 #' 
 #' @seealso
 #' \code{\link[vegan]{diversity}} for calculating the Shannon and Simpson diversity indices.

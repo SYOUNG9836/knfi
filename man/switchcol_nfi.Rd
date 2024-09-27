@@ -27,9 +27,7 @@ data("nfi_donghae")
 #Switch column names from English to original Korean names
 nfi_donghae_kor <- switchcol_nfi(nfi_donghae)
 
-\donttest{ 
 # Switch column names from original Korean to English names
 nfi_donghae_eng <- switchcol_nfi(nfi_donghae_kor)
-}
 
 }

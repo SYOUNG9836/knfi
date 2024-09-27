@@ -89,13 +89,11 @@ cwd_bm_df <- function(data){
 #' # Basic usage
 #' cwd <- cwd_biomass_nfi(nfi_donghae)
 #' 
-#' \donttest{
 #' # Calculate CWD biomass grouped by administrative district and decay class
 #' cwd_grp <- cwd_biomass_nfi(nfi_donghae, plotgrp = "SGG", treegrp = "DECAY")
 #' 
 #' # Calculate CWD biomass for each plot
 #' plot_biomass <- cwd_biomass_nfi(nfi_donghae, byplot = TRUE)
-#' }
 #' 
 #' @references 
 #' Son, Y., Kim, R., Lee, K., Pyo, J., Kim, S., Hwang, J., Lee, S., & Park, H. (2014). Carbon emission factors and biomass allometric equations by species in Korea. Korea Forest Research Institute.
