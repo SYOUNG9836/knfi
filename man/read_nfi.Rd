@@ -59,6 +59,10 @@ Species classification and taxonomy follow the standards set by the Korean Plant
 \note{
 To manually download subsets of the annual NFI file, visit the Korea Forest Service Forestry Statistics Platform (\url{https://kfss.forest.go.kr/stat/}), download .zip files, and extract them.
 
+-The 5th National Forest Inventory file: \url{https://kfss.forest.go.kr/stat/ptl/article/articleFileDown.do?fileSeq=2995&workSeq=2203}
+-The 6th National Forest Inventory file: \url{https://kfss.forest.go.kr/stat/ptl/article/articleFileDown.do?fileSeq=2996&workSeq=2204}
+-The 7th National Forest Inventory file: \url{https://kfss.forest.go.kr/stat/ptl/article/articleFileDown.do?fileSeq=2997&workSeq=2205}
+
 Use \code{data("col_name")} to view the Korean and English names of the column names.
 
 While the National Forest Inventory undergoes rigorous quality control, including internal reviews  and field inspections, errors may still exist due to the extensive nature of the survey (approximately 4,000 plots and over 70 items in the 7th phase).
