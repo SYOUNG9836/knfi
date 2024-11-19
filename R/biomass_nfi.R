@@ -46,12 +46,10 @@ bm_df <- function(data){
     (CONDEC_CLASS_CD ==0) ~ "OTHER_CON", # Other conifer species
     TRUE ~ as.character(NA)
     
-    # Bambusoideae (대나무) ?? 
-    
   ))
   
 
-  output <- left_join(output, bio_coeff, by= c("species_bm" ="SPCD") )
+  output <- left_join(output, bio_coeff[,-1], by= c("species_bm" ="SPCD") )
   
   ## Calculating aboveground biomass--------------------------------------------------------------
   ## species ~ Volume*(Wood density)*(Biomass expansion factor)-------------------------------
@@ -98,6 +96,7 @@ bm_df <- function(data){
 #' @param byplot : A logical flag (default FALSE); if TRUE, calculates statistics for each plot separately. If FALSE, calculates for the entire dataset or groups specified by `plotgrp` and `treegrp`.
 #' @param plotgrp : A character vector; variables from 'plot' tables for grouping. Use \code{c()} to combine multiple variables.
 #' @param treegrp : A character vector; variables from 'tree' tables for grouping. Use \code{c()} to combine multiple variables.
+#' @param continuousplot : A logical flag (default TRUE); if TRUE, includes only plots that have been continuously measured in all NFI cycles (5th, 6th, etc.). If FALSE, includes plots regardless of missing cycle measurements.
 #' @param strat : A character vector; the variable used for post-stratification. In the National Forest Inventory of Korea, it is typically used by forest type.
 #' @param clusterplot : A logical flag (default FALSE); if TRUE, treats each cluster plot as a single unit. If FALSE, calculates for each subplot separately.
 #' @param largetreearea : A logical flag (default TRUE); if TRUE, includes large tree survey plots in the analysis. If FALSE, only uses standard tree plots.
@@ -119,10 +118,10 @@ bm_df <- function(data){
 #' data("nfi_donghae")
 #' 
 #' # Basic usage
-#' biomass <- biomass_nfi(nfi_donghae)
+#' biomass <- biomass_nfi(nfi_donghae, continuousplot = TRUE)
 #' 
 #' # Calculate biomass by administrative district
-#' district_biomass <- biomass_nfi(nfi_donghae, plotgrp = "SGG")
+#' district_biomass <- biomass_nfi(nfi_donghae, plotgrp = "SGG", continuousplot=TRUE)
 #' 
 #' # Calculate biomass for each plot
 #' plot_biomass <- biomass_nfi(nfi_donghae, byplot = TRUE)
@@ -134,7 +133,7 @@ bm_df <- function(data){
 #' @export 
 
 
-biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp= NULL, strat="FORTYP_SUB", clusterplot=FALSE, largetreearea=TRUE, stockedland=TRUE, talltree=TRUE){
+biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp= NULL, continuousplot=FALSE, strat="FORTYP_SUB", clusterplot=FALSE, largetreearea=TRUE, stockedland=TRUE, talltree=TRUE){
   
   
   ## error message-------------------------------------------------------------- 
@@ -147,10 +146,12 @@ biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp= NULL, strat=
   
   
   if (clusterplot){
-    if(strat=="FORTYP_SUB"){
-      warning("When the param 'clusterplot' is set to TRUE, param 'strat' uses FORTYP_CLST (the forest type for the cluster plot) instead of FORTYP_SUB (the forest type for each subplot).")
+    if(!is.null(strat) && strat=="FORTYP_SUB"){
+      stop("When the param 'clusterplot' is set to TRUE, param 'strat' uses FORTYP_CLST (the forest type for the cluster plot) instead of FORTYP_SUB (the forest type for each subplot).")
+    }
     
-      strat <- c("FORTYP_CLST")
+    if(!is.null(plotgrp) && plotgrp=="FORTYP_SUB"){
+      stop("When the param 'clusterplot' is set to TRUE, param 'plotgrp' uses FORTYP_CLST (the forest type for the cluster plot) instead of FORTYP_SUB (the forest type for each subplot).")
     }
   }
   
@@ -202,6 +203,24 @@ biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp= NULL, strat=
   if(talltree){
     data$tree <- data$tree %>% filter(WDY_PLNTS_TYP_CD == "1")
   }
+  
+  if ("FORTYP_SUB" %in% names(data$plot)) {
+    data$plot <- data$plot %>% filter(!is.na(FORTYP_SUB))
+  }
+  
+  if(continuousplot){
+    
+    all_cycle <- unique(data$plot$CYCLE)
+    samples_with_all_cycle <- data$plot %>%
+      filter(!is.na(FORTYP_SUB)) %>%
+      group_by(SUB_PLOT) %>%
+      filter(all(all_cycle %in% CYCLE)) %>%
+      distinct(SUB_PLOT) %>%
+      pull(SUB_PLOT)
+    
+    data <- filter_nfi(data, c("plot$SUB_PLOT %in% samples_with_all_cycle"))
+    
+  }
 
   df <- left_join(data$tree[,c('CLST_PLOT', 'SUB_PLOT',"CYCLE", 'WDY_PLNTS_TYP_CD','SP', 'SPCD',
                                 'CONDEC_CLASS_CD', 'DECEVER_CD', 'DBH', 'VOL_EST',  'LARGEP_TREE', treegrp)], 
@@ -217,11 +236,12 @@ biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp= NULL, strat=
   
   if(!largetreearea){ 
     df <- df %>% filter(df$LARGEP_TREE == "0")
+    df$largetree <- 0
   }else{
     df$largetree <- ifelse(df$DBH>=30, 1, 0)
-    df$largetree_area <- 0.08 - ((df$NONFR_INCL_AREA_LARGEP*10)/10000) # unit m2/10
   }
   
+  df$largetree_area <- 0.08 - ((df$NONFR_INCL_AREA_LARGEP*10)/10000) # unit m2/10
   df$tree_area <- 0.04 - ((df$NONFR_INCL_AREA_SUBP*10)/10000)
   
   df <- bm_df(df)
@@ -254,18 +274,16 @@ biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp= NULL, strat=
       group_by(CYCLE, !!plot_id, INVYR) %>%
       summarise(largetree_area = sum(largetree_area, na.rm=TRUE),
                 tree_area= sum(tree_area, na.rm=TRUE),.groups = 'drop')
-    
+
     bm_temp <- df %>% 
-      group_by(CYCLE, !!plot_id, INVYR, largetree, !!!plotgrp, !!!treegrp, !!strat) %>% 
+      group_by(CYCLE, !!plot_id, INVYR, largetree, !!!plotgrp, SP, !!strat) %>% 
       summarise(volume_m3 = sum(VOL_EST, na.rm=TRUE),
                 biomass_ton = sum(T_biomass, na.rm=TRUE),
                 AG_biomass_ton = sum(AG_biomass, na.rm=TRUE),
                 carbon_stock_tC = sum(carbon_stock, na.rm=TRUE),
                 co2_stock_tCO2 = sum(co2_stock, na.rm=TRUE),.groups = 'drop')
-    
+
     bm_temp <- full_join(bm_temp, plot_area, by=c('CYCLE', 'INVYR', quo_name(plot_id)))
-    
-    condition <- (names(bm_temp) %in% c("volume_m3","biomass_ton","AG_biomass_ton","carbon_stock_tC","co2_stock_tCO2"))
     
     
     if(!largetreearea){ # 1.1.1 Biomass calculation by cluster plots excluding large tree survey plots 
@@ -274,6 +292,7 @@ biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp= NULL, strat=
       bm_temp[condition_ha] <-  NA
       bm_temp <- as.data.frame(bm_temp)
       
+      condition <- (names(bm_temp) %in% c("volume_m3","biomass_ton","AG_biomass_ton","carbon_stock_tC","co2_stock_tCO2"))
       condition_ha <- (names(bm_temp) %in% c("volume_m3_ha","biomass_ton_ha","AG_biomass_ton_ha","carbon_stock_tC_ha","co2_stock_tCO2_ha"))
       
       bm_temp[condition_ha] <- 
@@ -284,10 +303,12 @@ biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp= NULL, strat=
       
       bm_temp[condition] <- NULL
       bm_temp$tree_area <- NULL
-      bm_temp$largetreearea <- NULL
+      bm_temp$largetree_area <- NULL
       
       
     }else{ # 1.1.2 Biomass calculation by cluster plots including large tree survey plots 
+      
+      condition <- (names(bm_temp) %in% c("volume_m3","biomass_ton","AG_biomass_ton","carbon_stock_tC","co2_stock_tCO2"))
       
       bm_temp[condition] <- 
         lapply(bm_temp[condition], function(x) ifelse(bm_temp$largetree == 1, 
@@ -319,15 +340,13 @@ biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp= NULL, strat=
                 carbon_stock_tC = sum(carbon_stock, na.rm=TRUE),
                 co2_stock_tCO2 = sum(co2_stock, na.rm=TRUE),.groups = 'drop')
     
-
-    condition <- (names(bm_temp) %in% c("volume_m3","biomass_ton","AG_biomass_ton","carbon_stock_tC","co2_stock_tCO2"))
-    
     if(!largetreearea){ # 1.2.1 Biomass calculation by subplots excluding large tree survey plots  
       
       condition_ha <- c("volume_m3_ha","biomass_ton_ha","AG_biomass_ton_ha","carbon_stock_tC_ha","co2_stock_tCO2_ha")
       bm_temp[condition_ha] <-  NA
       bm_temp <- as.data.frame(bm_temp)
       
+      condition <- (names(bm_temp) %in% c("volume_m3","biomass_ton","AG_biomass_ton","carbon_stock_tC","co2_stock_tCO2"))
       condition_ha <- (names(bm_temp) %in% c("volume_m3_ha","biomass_ton_ha","AG_biomass_ton_ha","carbon_stock_tC_ha","co2_stock_tCO2_ha"))
       
       bm_temp[condition_ha] <- 
@@ -338,11 +357,13 @@ biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp= NULL, strat=
       
       bm_temp[condition] <- NULL
       bm_temp$tree_area <- NULL
-      bm_temp$largetreearea <- NULL
+      bm_temp$largetree_area <- NULL
       
       
       
     }else{ # 1.2.2 Biomass calculation by subplots including large tree survey plots  
+      
+      condition <- (names(bm_temp) %in% c("volume_m3","biomass_ton","AG_biomass_ton","carbon_stock_tC","co2_stock_tCO2"))
       
       bm_temp[condition] <- 
         lapply(bm_temp[condition], function(x) ifelse(bm_temp$largetree == 1, 
@@ -559,10 +580,12 @@ biomass_tsvis <- function(data, plotgrp=NULL, treegrp=NULL, strat="FORTYP_SUB", 
   }
   
   if (clusterplot){
-    if(strat=="FORTYP_SUB"){
-      warning("When the param 'clusterplot' is set to TRUE, param 'strat' uses FORTYP_CLST (the forest type for the cluster plot) instead of FORTYP_SUB (the forest type for each subplot).")
-      
-      strat <- c("FORTYP_CLST")
+    if(!is.null(strat) && strat=="FORTYP_SUB"){
+      stop("When the param 'clusterplot' is set to TRUE, param 'strat' uses FORTYP_CLST (the forest type for the cluster plot) instead of FORTYP_SUB (the forest type for each subplot).")
+    }
+    
+    if(!is.null(plotgrp) && plotgrp=="FORTYP_SUB"){
+      stop("When the param 'clusterplot' is set to TRUE, param 'plotgrp' uses FORTYP_CLST (the forest type for the cluster plot) instead of FORTYP_SUB (the forest type for each subplot).")
     }
   }
   
@@ -598,6 +621,10 @@ biomass_tsvis <- function(data, plotgrp=NULL, treegrp=NULL, strat="FORTYP_SUB", 
     data$tree <- data$tree %>% filter(WDY_PLNTS_TYP_CD == "1")
   }
   
+  if ("FORTYP_SUB" %in% names(data$plot)) {
+    data$plot <- data$plot %>% filter(!is.na(FORTYP_SUB))
+  }
+  
   df <- left_join(data$tree[,c('CLST_PLOT', 'SUB_PLOT',"CYCLE", 'WDY_PLNTS_TYP_CD','SP', 'SPCD',
                                'CONDEC_CLASS_CD', 'DECEVER_CD', 'DBH', 'VOL_EST',  'LARGEP_TREE', treegrp )], 
                   data$plot[,c('CLST_PLOT', 'SUB_PLOT', "CYCLE", 'INVYR', "LAND_USE", "LAND_USECD",
@@ -611,12 +638,12 @@ biomass_tsvis <- function(data, plotgrp=NULL, treegrp=NULL, strat="FORTYP_SUB", 
   
   if(!largetreearea){ 
     df <- df %>% filter(df$LARGEP_TREE == "0")
+    df$largetree <- 0
   }else{
     df$largetree <- ifelse(df$DBH>=30, 1, 0)
-    df$largetree_area <- 0.08 - ((df$NONFR_INCL_AREA_LARGEP*10)/10000) # unit m2/10
   }
   
-  
+  df$largetree_area <- 0.08 - ((df$NONFR_INCL_AREA_LARGEP*10)/10000) # unit m2/10
   df$tree_area <- 0.04 - ((df$NONFR_INCL_AREA_SUBP*10)/10000)
   
   df <- bm_df(df)
@@ -660,8 +687,6 @@ biomass_tsvis <- function(data, plotgrp=NULL, treegrp=NULL, strat="FORTYP_SUB", 
     
     bm_temp <- full_join(bm_temp, plot_area, by=c('CYCLE', 'INVYR', quo_name(plot_id)))
     
-    condition <- (names(bm_temp) %in% c("volume_m3","biomass_ton","AG_biomass_ton","carbon_stock_tC","co2_stock_tCO2"))
-    
     
     if(!largetreearea){ # 1.1.1 Biomass calculation by cluster plots excluding large tree survey plots
       
@@ -669,6 +694,7 @@ biomass_tsvis <- function(data, plotgrp=NULL, treegrp=NULL, strat="FORTYP_SUB", 
       bm_temp[condition_ha] <-  NA
       bm_temp <- as.data.frame(bm_temp)
       
+      condition <- (names(bm_temp) %in% c("volume_m3","biomass_ton","AG_biomass_ton","carbon_stock_tC","co2_stock_tCO2"))
       condition_ha <- (names(bm_temp) %in% c("volume_m3_ha","biomass_ton_ha","AG_biomass_ton_ha","carbon_stock_tC_ha","co2_stock_tCO2_ha"))
       
       bm_temp[condition_ha] <- 
@@ -679,11 +705,12 @@ biomass_tsvis <- function(data, plotgrp=NULL, treegrp=NULL, strat="FORTYP_SUB", 
       
       bm_temp[condition] <- NULL
       bm_temp$tree_area <- NULL
-      bm_temp$largetreearea <- NULL
+      bm_temp$largetree_area <- NULL
       
       
     }else{ # 1.1.2 Biomass calculation by cluster plots including large tree survey plots
       
+      condition <- (names(bm_temp) %in% c("volume_m3","biomass_ton","AG_biomass_ton","carbon_stock_tC","co2_stock_tCO2"))
       bm_temp[condition] <- 
         lapply(bm_temp[condition], function(x) ifelse(bm_temp$largetree == 1, 
                                                       x/(bm_temp$largetree_area),
@@ -713,15 +740,13 @@ biomass_tsvis <- function(data, plotgrp=NULL, treegrp=NULL, strat="FORTYP_SUB", 
                 carbon_stock_tC = sum(carbon_stock, na.rm=TRUE),
                 co2_stock_tCO2 = sum(co2_stock, na.rm=TRUE),.groups = 'drop')
     
-    
-    condition <- (names(bm_temp) %in% c("volume_m3","biomass_ton","AG_biomass_ton","carbon_stock_tC","co2_stock_tCO2"))
-    
     if(!largetreearea){ # 1.2.1 Biomass calculation by subplots excluding large tree survey plots
       
       condition_ha <- c("volume_m3_ha","biomass_ton_ha","AG_biomass_ton_ha","carbon_stock_tC_ha","co2_stock_tCO2_ha")
       bm_temp[condition_ha] <-  NA
       bm_temp <- as.data.frame(bm_temp)
       
+      condition <- (names(bm_temp) %in% c("volume_m3","biomass_ton","AG_biomass_ton","carbon_stock_tC","co2_stock_tCO2"))
       condition_ha <- (names(bm_temp) %in% c("volume_m3_ha","biomass_ton_ha","AG_biomass_ton_ha","carbon_stock_tC_ha","co2_stock_tCO2_ha"))
       
       bm_temp[condition_ha] <- 
@@ -733,11 +758,12 @@ biomass_tsvis <- function(data, plotgrp=NULL, treegrp=NULL, strat="FORTYP_SUB", 
       
       bm_temp[condition] <- NULL
       bm_temp$tree_area <- NULL
-      bm_temp$largetreearea <- NULL
+      bm_temp$largetree_area <- NULL
       
       
     }else{ # 1.2.2 Biomass calculation by subplots including large tree survey plots
       
+      condition <- (names(bm_temp) %in% c("volume_m3","biomass_ton","AG_biomass_ton","carbon_stock_tC","co2_stock_tCO2"))
       bm_temp[condition] <- 
         lapply(bm_temp[condition], function(x) ifelse(bm_temp$largetree == 1, 
                                                       x/(bm_temp$largetree_area),

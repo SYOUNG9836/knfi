@@ -62,111 +62,112 @@
 
 filter_nfi <- function(data, expr_texts, hier=TRUE){
   
-  ## error message-------------------------------------------------------------- 
-  # Extract dataframe names from each expression
-  matches <- regmatches(expr_texts, gregexpr("\\w+(?=\\$)", expr_texts, perl=TRUE))
-  # Check that each expression references a unique dataframe
+  variable_names <- stringr::str_extract_all(expr_texts, "\\b\\w+\\b") %>% 
+    unlist() %>% 
+    unique()
   
-  vector_data <- unlist(matches)
+  env_c <- rlang::caller_env(n=1)
+  force(env_c)
   
-  matches_chek <- sapply(matches, function(x) length(unique(x)) == 1)
+  values <- lapply(variable_names, function(var_name) {
+    if (exists(var_name, envir = env_c)) {
+      var <- get(var_name, envir = env_c)
+    } else {
+      var <- NULL
+    }
+    
+    if (!is.function(var)){
+      var <- var
+    } else {
+      var <- NULL
+    }
+    return(var)
+  })
+
+  named_values <- purrr::set_names(values, variable_names)
+  named_values <- Filter(function(x) !(is.null(x) || all(sapply(x, is.null))), named_values)
+  env <- rlang::env(!!!named_values, data=data, environment())
+
   data_names <- paste(names(data), collapse = ", ")
-  
-  if(!all(vector_data %in% names(data)) | any(matches_chek == FALSE)){
-    stop(paste0("Each value in param 'expr_texts' must start with ", data_names ,
-                ". and param 'expr_texts' requires separate expressions for each item in ", deparse(substitute(data)), 
-                ". For example: c('plot$OWN_CD == \"5\"', 'tree$FAMILY == \"Pinaceae\" | tree$WDY_PLNTS_TYP_CD == \"1\"')"))
-  }
-  
- 
+
   ## Preprocessing--------------------------------------------------------------
   # Iterate over each expression
-  for(expr_text in expr_texts){
-    # Remove the dataframe name from the expression
-    modified_text <- gsub("\\w+\\$", "", expr_text)
-    # Convert modified text into expressions
-    modified_expressions <- rlang::parse_exprs(modified_text)
-    
-    # Extract dataframe name
-    name <- regmatches(expr_text, gregexpr("\\w+(?=\\$)", expr_text, perl=TRUE))[[1]][1]
+  for(expr_text in expr_texts) {
+    extracted_df <- character()
+    matched_texts <- regmatches(expr_text, gregexpr("\\b\\w+\\$\\w+\\b", expr_text, perl = TRUE))[[1]]
+
+    for(matched_text  in matched_texts) {
+      df_name <- sub("(\\w+)\\$(\\w+)", "\\1", matched_text)
+      col_name <- sub("(\\w+)\\$(\\w+)", "\\2", matched_text)
+
+      if(exists(df_name, where = data) && col_name %in% names(data[[df_name]])) {
+        extracted_df <- df_name
+        break
+      }else{
+        ## error message--------------------------------------------------------------
+        stop(paste0("Each value in param 'expr_texts' must start with ", data_names ,
+                    ". and param 'expr_texts' requires separate expressions for each item in ", deparse(substitute(data)),
+                    ". For example: c('plot$OWN_CD == \"5\"', 'tree$FAMILY == \"Pinaceae\" | tree$WDY_PLNTS_TYP_CD == \"1\"')"))
+      }
+    }
+
+
+    modified_text <- gsub(paste0("(?<!\\$)", extracted_df, "\\$"), "", expr_text, perl = TRUE)
+    modified_expression <- rlang::parse_exprs(modified_text)[[1]]
 
     # Apply conditions to the 'plot' dataframe
-    if(grepl("plot\\$", expr_text)){
+    if(extracted_df == "plot"){
+
       # Hierarchical filtering
       if(hier){
-        
-        filter_plot <- data$plot %>%
-          filter(!!!modified_expressions)
-        
-        if(grepl("CYCLE", modified_text, ignore.case = TRUE)){
-          
-          plot_all <- filter_plot[, c("SUB_PLOT", "CYCLE")]
-          
-          results <- lapply(data[-1], function(df) {
-            df_filtered <- semi_join(df, plot_all, by=c("SUB_PLOT", "CYCLE"))
-            return(df_filtered)
-          })
-          
-        }else{
-          
-          plot_all <- unique(filter_plot$SUB_PLOT)
-          
-          results <- lapply(data[-1], function(df) {
-            df_filtered <- df[df$SUB_PLOT %in% plot_all, ]
-            return(df_filtered)
-          })
-          
-        }
 
-        
+        filter_plot <- data$plot %>%
+          filter(!!rlang::eval_tidy(modified_expression, data = data$plot, env = env))
+
+        plot_all <- filter_plot[, c("SUB_PLOT", "CYCLE")]
+
+        results <- lapply(data[-1], function(df) {
+          df_filtered <- semi_join(df, plot_all, by=c("SUB_PLOT", "CYCLE"))
+          return(df_filtered)
+        })
+
         data <- c(list(plot = filter_plot), results)
-        
+
       }else{
         # Non-hierarchical filtering
         data$plot <- data$plot %>%
-          filter(!!!modified_expressions)
+          filter(!!rlang::eval_tidy(modified_expression, data = data$plot, env = env))
       }
-      
+
     }else{
       # Apply conditions to other dataframe
       if(hier){
-        
+
         # Hierarchical filtering
-        data[[name]] <- data[[name]] %>%
-          filter(!!!modified_expressions)
-        
+        data[[extracted_df]] <- data[[extracted_df]] %>%
+          filter(!!rlang::eval_tidy(modified_expression, data = data[[extracted_df]], env = env))
+
       }else{
         # Non-hierarchical filtering
-        filter_plot <- data[[name]] %>%
-          filter(!!!modified_expressions)
-        
-        if(grepl("CYCLE", modified_text, ignore.case = TRUE)){
-          
-          plot_all <- filter_plot[, c("SUB_PLOT", "CYCLE")]
-          
-          results <- lapply(data, function(df) {
-            df_filtered <- semi_join(df, plot_all, by=c("SUB_PLOT", "CYCLE"))
-            return(df_filtered)
-          })
-          
-        }else{
-          
-          plot_all <- unique(filter_plot$SUB_PLOT)
-          
-          results <- lapply(data, function(df) {
-            df_filtered <- df[df$SUB_PLOT %in% plot_all, ]
-            return(df_filtered)
-          })
-          
-        }
-      
-        results[[name]] <- results[[name]] %>% 
-          filter(!!!modified_expressions)
-        
+        filter_plot <- data[[extracted_df]] %>%
+          filter(!!rlang::eval_tidy(modified_expression, data = data[[extracted_df]], env = env))
+
+
+        plot_all <- filter_plot[, c("SUB_PLOT", "CYCLE")]
+
+        results <- lapply(data, function(df) {
+          df_filtered <- semi_join(df, plot_all, by=c("SUB_PLOT", "CYCLE"))
+          return(df_filtered)
+        })
+
+        results[[extracted_df]] <- results[[extracted_df]] %>%
+          filter(!!rlang::eval_tidy(modified_expression, data = data[[extracted_df]], env = env))
+
         data <- results
-        
+
       }
     }
+
   }
     
   # Return the filtered data

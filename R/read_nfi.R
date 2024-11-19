@@ -4,6 +4,7 @@
 #' read_nfi() function reads and processes the Korean National Forest Inventory (NFI).
 #' It loads annual NFI files from a local computer, transforms the data into an analysis-friendly format, and performs data integrity verification.
 #' Users can specify districts and tables to load.
+#' When loading data from the original NFI Excel files, the function will automatically handle the translation of Korean column names to English - no manual translation is required.
 #' NFI data can be downloaded from \url{https://kfss.forest.go.kr/stat/}.
 #' 
 #' @details 
@@ -41,13 +42,15 @@
 #' @param dir : A character vector; The directory containing NFI files.
 #' @param district : A character vector; The district names in Korean (sido, sigungu, or eupmyondong levels). If `NULL`, the entire dataset is loaded. Combine multiple districts using \code{c()}. 
 #' @param tables : A character vector; tables to import. Options: 'tree', 'cwd', 'stump', 'sapling', 'veg', 'herb', 'soil'. Combine multiple tables using \code{c()}. e.g., `c('tree', 'cwd', 'stump', 'sapling', 'veg', 'herb', 'soil')`.  
+#' @param pattern : A character vector; (default "xlsx"); file pattern to match when loading NFI files. Use regular expressions to filter specific files (e.g., "NFI5.*xlsx" for 5th NFI files only)
+#' @param ... : Additional arguments to be passed to \code{list.files()}
 #' 
 #' @return A `data.frame`; the processed NFI data, structured for easy analysis. 
 #' 
 #' @examples
 #' \donttest{
 #'  # Load tree and CWD data for all districts
-#'  nfi5_data <- read_nfi("D:/NFI/NFI5", district = NULL, tables = c("tree", "cwd"))
+#'  nfi5_data <- read_nfi("D:/NFI/", district = NULL, tables = c("tree", "cwd"), recursive = TRUE)
 #' }
 #' 
 #' @note  
@@ -57,7 +60,7 @@
 #' -The 6th National Forest Inventory file: \url{https://kfss.forest.go.kr/stat/ptl/article/articleFileDown.do?fileSeq=2996&workSeq=2204}
 #' -The 7th National Forest Inventory file: \url{https://kfss.forest.go.kr/stat/ptl/article/articleFileDown.do?fileSeq=2997&workSeq=2205}
 #' 
-#' Use \code{data("col_name")} to view the Korean and English names of the column names. 
+#' Use \code{data("nfi_col")} to view the Korean and English names of the column names. 
 #' 
 #' While the National Forest Inventory undergoes rigorous quality control, including internal reviews  and field inspections, errors may still exist due to the extensive nature of the survey (approximately 4,000 plots and over 70 items in the 7th phase). 
 #' Please use the data cautiously and report any anomalies to help improve our algorithms.
@@ -73,7 +76,7 @@
 #' @export
 
 
-read_nfi <- function(dir, district=NULL, tables=c("tree", "cwd")){
+read_nfi <- function(dir, district=NULL, tables=c("tree", "cwd"), pattern = "xlsx", ...){
   
   
   ## Load a list of .xlsx files located in the path--------------------------------------------------
@@ -116,9 +119,9 @@ read_nfi <- function(dir, district=NULL, tables=c("tree", "cwd")){
       
       stop(paste0( 'District ', district, ' does not exist. ', matches_name))
     }}
+
   
-  
-  filenames <- list.files(path=dir, pattern="xlsx")
+  filenames <- list.files(path=dir, pattern=pattern, ...)
   
   plot_list <- vector("list", length = length(filenames))
   tree_list <- vector("list", length = length(filenames))
@@ -141,13 +144,13 @@ read_nfi <- function(dir, district=NULL, tables=c("tree", "cwd")){
     colnames(General_info) <- gsub("\\s+", " ", gsub("[`]", "", colnames(General_info)))
     
     general_info_colnames <- names(General_info)
-    missing_names <- general_info_colnames[!general_info_colnames %in% col_name$Korean_Column_Name]
+    missing_names <- general_info_colnames[!general_info_colnames %in% nfi_col$Korean_Column_Name]
     
     for (name in missing_names) {
-      col_name <- rbind(col_name, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
+      nfi_col <- bind_rows(nfi_col, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
     }
     
-    new_names <- stats::setNames(col_name$Column_Name, col_name$Korean_Column_Name)
+    new_names <- stats::setNames(nfi_col$Column_Name, nfi_col$Korean_Column_Name)
     General_info <- stats::setNames(General_info, new_names[names(General_info)])
     
     General_info <- General_info[(names(General_info) != c("CREATED_DATE"))]
@@ -160,13 +163,13 @@ read_nfi <- function(dir, district=NULL, tables=c("tree", "cwd")){
     colnames(Non_forest) <- gsub("\\s+", " ", gsub("[`]", "", colnames(Non_forest)))
     
     Non_forest_colnames <- names(Non_forest)
-    missing_names <- Non_forest_colnames[!Non_forest_colnames %in% col_name$Korean_Column_Name]
+    missing_names <- Non_forest_colnames[!Non_forest_colnames %in% nfi_col$Korean_Column_Name]
     
     for (name in missing_names) {
-      col_name <- rbind(col_name, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
+      nfi_col <- bind_rows(nfi_col, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
     }
     
-    new_names <- stats::setNames(col_name$Column_Name, col_name$Korean_Column_Name)
+    new_names <- stats::setNames(nfi_col$Column_Name, nfi_col$Korean_Column_Name)
     Non_forest <- stats::setNames(Non_forest, new_names[names(Non_forest)])
     
     
@@ -177,13 +180,13 @@ read_nfi <- function(dir, district=NULL, tables=c("tree", "cwd")){
     colnames(Stand_inve) <- gsub("\\s+", " ", gsub("[`]", "", colnames(Stand_inve)))
     
     Stand_inve_colnames <- names(Stand_inve)
-    missing_names <- Stand_inve_colnames[!Stand_inve_colnames %in% col_name$Korean_Column_Name]
+    missing_names <- Stand_inve_colnames[!Stand_inve_colnames %in% nfi_col$Korean_Column_Name]
     
     for (name in missing_names) {
-      col_name <- rbind(col_name, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
+      nfi_col <- bind_rows(nfi_col, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
     }
     
-    new_names <- stats::setNames(col_name$Column_Name, col_name$Korean_Column_Name)
+    new_names <- stats::setNames(nfi_col$Column_Name, nfi_col$Korean_Column_Name)
     Stand_inve <- stats::setNames(Stand_inve, new_names[names(Stand_inve)])
     
     
@@ -247,13 +250,13 @@ read_nfi <- function(dir, district=NULL, tables=c("tree", "cwd")){
       colnames(tree_list[[i]]) <- gsub("\\s+", " ", gsub("[`]", "", colnames(tree_list[[i]])))
       
       tree_list_colnames <- names(tree_list[[i]])
-      missing_names <- tree_list_colnames[!tree_list_colnames %in% col_name$Korean_Column_Name]
+      missing_names <- tree_list_colnames[!tree_list_colnames %in% nfi_col$Korean_Column_Name]
       
       for (name in missing_names) {
-        col_name <- rbind(col_name, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
+        nfi_col <- bind_rows(nfi_col, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
       }
       
-      new_names <- stats::setNames(col_name$Column_Name, col_name$Korean_Column_Name)
+      new_names <- stats::setNames(nfi_col$Column_Name, nfi_col$Korean_Column_Name)
       tree_list[[i]] <- stats::setNames(tree_list[[i]], new_names[names(tree_list[[i]])])
       
       
@@ -269,13 +272,13 @@ read_nfi <- function(dir, district=NULL, tables=c("tree", "cwd")){
       colnames(cwd_list[[i]]) <- gsub("\\s+", " ", gsub("[`]", "", colnames(cwd_list[[i]])))
       
       cwd_list_colnames <- names(cwd_list[[i]])
-      missing_names <- cwd_list_colnames[!cwd_list_colnames %in% col_name$Korean_Column_Name]
+      missing_names <- cwd_list_colnames[!cwd_list_colnames %in% nfi_col$Korean_Column_Name]
       
       for (name in missing_names) {
-        col_name <- rbind(col_name, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
+        nfi_col <- bind_rows(nfi_col, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
       }
       
-      new_names <- stats::setNames(col_name$Column_Name, col_name$Korean_Column_Name)
+      new_names <- stats::setNames(nfi_col$Column_Name, nfi_col$Korean_Column_Name)
       cwd_list[[i]] <- stats::setNames(cwd_list[[i]], new_names[names(cwd_list[[i]])])
       
       cwd_list[[i]] <- cwd_list[[i]][cwd_list[[i]]$SUB_PLOT %in% plot_all,]
@@ -290,13 +293,13 @@ read_nfi <- function(dir, district=NULL, tables=c("tree", "cwd")){
       colnames(stump_list[[i]]) <- gsub("\\s+", " ", gsub("[`]", "", colnames(stump_list[[i]])))
       
       stump_list_colnames <- names(stump_list[[i]])
-      missing_names <- stump_list_colnames[!stump_list_colnames %in% col_name$Korean_Column_Name]
+      missing_names <- stump_list_colnames[!stump_list_colnames %in% nfi_col$Korean_Column_Name]
       
       for (name in missing_names) {
-        col_name <- rbind(col_name, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
+        nfi_col <- bind_rows(nfi_col, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
       }
       
-      new_names <- stats::setNames(col_name$Column_Name, col_name$Korean_Column_Name)
+      new_names <- stats::setNames(nfi_col$Column_Name, nfi_col$Korean_Column_Name)
       stump_list[[i]] <- stats::setNames(stump_list[[i]], new_names[names(stump_list[[i]])])
       
       stump_list[[i]] <- stump_list[[i]][stump_list[[i]]$SUB_PLOT %in% plot_all,]
@@ -311,13 +314,13 @@ read_nfi <- function(dir, district=NULL, tables=c("tree", "cwd")){
       colnames(sapling_list[[i]]) <- gsub("\\s+", " ", gsub("[`]", "", colnames(sapling_list[[i]])))
       
       sapling_list_colnames <- names(sapling_list[[i]])
-      missing_names <- sapling_list_colnames[!sapling_list_colnames %in% col_name$Korean_Column_Name]
+      missing_names <- sapling_list_colnames[!sapling_list_colnames %in% nfi_col$Korean_Column_Name]
       
       for (name in missing_names) {
-        col_name <- rbind(col_name, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
+        nfi_col <- bind_rows(nfi_col, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
       }
       
-      new_names <- stats::setNames(col_name$Column_Name, col_name$Korean_Column_Name)
+      new_names <- stats::setNames(nfi_col$Column_Name, nfi_col$Korean_Column_Name)
       sapling_list[[i]] <- stats::setNames(sapling_list[[i]], new_names[names(sapling_list[[i]])])
       
       sapling_list[[i]] <- sapling_list[[i]][sapling_list[[i]]$SUB_PLOT %in% plot_all,]
@@ -333,13 +336,13 @@ read_nfi <- function(dir, district=NULL, tables=c("tree", "cwd")){
       colnames(veg_list[[i]]) <- gsub("\\s+", " ", gsub("[`]", "", colnames(veg_list[[i]])))
       
       veg_list_colnames <- names(veg_list[[i]])
-      missing_names <- veg_list_colnames[!veg_list_colnames %in% col_name$Korean_Column_Name]
+      missing_names <- veg_list_colnames[!veg_list_colnames %in% nfi_col$Korean_Column_Name]
       
       for (name in missing_names) {
-        col_name <- rbind(col_name, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
+        nfi_col <- bind_rows(nfi_col, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
       }
       
-      new_names <- stats::setNames(col_name$Column_Name, col_name$Korean_Column_Name)
+      new_names <- stats::setNames(nfi_col$Column_Name, nfi_col$Korean_Column_Name)
       veg_list[[i]] <- stats::setNames(veg_list[[i]], new_names[names(veg_list[[i]])])
       
       veg_list[[i]] <- veg_list[[i]][veg_list[[i]]$SUB_PLOT %in% plot_all,]
@@ -355,13 +358,13 @@ read_nfi <- function(dir, district=NULL, tables=c("tree", "cwd")){
       colnames(herb_list[[i]]) <- gsub("\\s+", " ", gsub("[`]", "", colnames(herb_list[[i]])))
       
       herb_list_colnames <- names(herb_list[[i]])
-      missing_names <- herb_list_colnames[!herb_list_colnames %in% col_name$Korean_Column_Name]
+      missing_names <- herb_list_colnames[!herb_list_colnames %in% nfi_col$Korean_Column_Name]
       
       for (name in missing_names) {
-        col_name <- rbind(col_name, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
+        nfi_col <- bind_rows(nfi_col, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
       }
       
-      new_names <- stats::setNames(col_name$Column_Name, col_name$Korean_Column_Name)
+      new_names <- stats::setNames(nfi_col$Column_Name, nfi_col$Korean_Column_Name)
       herb_list[[i]] <- stats::setNames(herb_list[[i]], new_names[names(herb_list[[i]])])
       
       herb_list[[i]] <- herb_list[[i]][herb_list[[i]]$SUB_PLOT %in% plot_all,]
@@ -376,13 +379,13 @@ read_nfi <- function(dir, district=NULL, tables=c("tree", "cwd")){
       colnames(soil_list[[i]]) <- gsub("\\s+", " ", gsub("[`]", "", colnames(soil_list[[i]])))
       
       soil_list_colnames <- names(soil_list[[i]])
-      missing_names <- soil_list_colnames[!soil_list_colnames %in% col_name$Korean_Column_Name]
+      missing_names <- soil_list_colnames[!soil_list_colnames %in% nfi_col$Korean_Column_Name]
       
       for (name in missing_names) {
-        col_name <- rbind(col_name, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
+        nfi_col <- bind_rows(nfi_col, data.frame(Column_Name = name, English_Name = NA, Korean_Column_Name = name))
       }
       
-      new_names <- stats::setNames(col_name$Column_Name, col_name$Korean_Column_Name)
+      new_names <- stats::setNames(nfi_col$Column_Name, nfi_col$Korean_Column_Name)
       soil_list[[i]] <- stats::setNames(soil_list[[i]], new_names[names(soil_list[[i]])])
       
       soil_list[[i]] <- soil_list[[i]][soil_list[[i]]$SUB_PLOT %in% plot_all,]
@@ -517,8 +520,17 @@ read_nfi <- function(dir, district=NULL, tables=c("tree", "cwd")){
     # FORTYP based on basal area (subplot)  --------------------------------------------------------------
     NFI$tree$BASAL_AREA <- (pi*(NFI$tree$DBH/2)^2)/10000
     
-    stand_sub <- NFI$tree %>% filter(LARGEP_TREE == "0") 
-    stand_sub <- stand_sub %>%  
+    large_tree_sub <- NFI$tree %>%
+      group_by(CLST_PLOT, SUB_PLOT, CYCLE) %>%
+      filter(!any(LARGEP_TREE == "0")) %>%
+      distinct(CLST_PLOT, SUB_PLOT, CYCLE)
+    
+    stand_sub_data <- NFI$tree %>% filter(LARGEP_TREE == "0")
+    stand_sub_data_2 <- left_join(large_tree_sub, NFI$tree, by= c("CLST_PLOT", "SUB_PLOT","CYCLE"))
+    
+    stand_sub_data <- bind_rows(stand_sub_data, stand_sub_data_2)
+    
+    stand_sub <- stand_sub_data %>%  
       mutate(deciduous_ba = ifelse(CONDEC_CLASS_CD == "1",  BASAL_AREA, 0)) %>% # deciduous
       group_by(SUB_PLOT, CYCLE) %>% 
       summarise(all_ba = sum(BASAL_AREA), 
@@ -529,9 +541,8 @@ read_nfi <- function(dir, district=NULL, tables=c("tree", "cwd")){
     stand_sub$FORTYP_SUB <- ifelse(stand_sub$percent>=75, "Deciduous", 
                                    ifelse(stand_sub$percent>25, "Mixed", "Coniferous"))
     
-    
-    domin <- NFI$tree %>% filter(LARGEP_TREE == "0") 
-    domin <- domin %>%
+
+    domin <- stand_sub_data %>%
       group_by(SUB_PLOT, CYCLE,  SP) %>%
       summarise(domin_ba = sum(BASAL_AREA), .groups = 'drop') %>%
       group_by(SUB_PLOT, CYCLE) %>%
@@ -581,6 +592,8 @@ read_nfi <- function(dir, district=NULL, tables=c("tree", "cwd")){
     
     NFI$plot <- left_join(NFI$plot, stand_clust[condition], by= c("CLST_PLOT","CYCLE"))
     
+  }else{
+    NFI$plot <- left_join(NFI$plot, NFI_FORTYP_DB, by= c("CLST_PLOT", "SUB_PLOT", "CYCLE", "INVYR"))
   }
   
   

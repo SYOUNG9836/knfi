@@ -7,8 +7,9 @@
 iv_nfi(
   data,
   sp = "SP",
-  plotgrp = NULL,
   frequency = TRUE,
+  plotgrp = NULL,
+  continuousplot = FALSE,
   clusterplot = FALSE,
   largetreearea = FALSE,
   stockedland = TRUE,
@@ -20,9 +21,11 @@ iv_nfi(
 
 \item{sp}{:A character vector; the column name of species information (e.g., "SP" for species, "GENUS" for genus-level analysis).}
 
+\item{frequency}{: A logical flag (default TRUE); if TRUE, includes frequency in importance value calculations.}
+
 \item{plotgrp}{: A character vector; specifies variables from 'plot' table to use for grouping. Use \code{c()} to combine multiple variables.}
 
-\item{frequency}{: A logical flag (default TRUE); if TRUE, includes frequency in importance value calculations.}
+\item{continuousplot}{: A logical flag (default TRUE); if TRUE, includes only plots that have been continuously measured in all NFI cycles (5th, 6th, etc.). If FALSE, includes plots regardless of missing cycle measurements.}
 
 \item{clusterplot}{: A logical flag (default FALSE); if TRUE, treats each cluster plot as a single unit. If FALSE, calculates for each subplot separately.}
 
@@ -60,10 +63,10 @@ The importance value (ranging from 0 to 100) is calculated as the mean of:
 
 data("nfi_donghae")
 # Calculate importance values without frequency
-importance <- iv_nfi(nfi_donghae, sp = "SP", frequency = FALSE)
+importance <- iv_nfi(nfi_donghae, sp = "SP", frequency = FALSE, continuousplot = TRUE)
 
 # Calculate importance values using genus
-genus_importance <- iv_nfi(nfi_donghae, sp = "GENUS")
+genus_importance <- iv_nfi(nfi_donghae, sp = "GENUS", continuousplot = TRUE)
 
 }
 \references{

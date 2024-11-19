@@ -9,8 +9,9 @@ diversity_nfi(
   sp = "SP",
   table = "tree",
   basal = FALSE,
-  plotgrp = NULL,
   byplot = FALSE,
+  plotgrp = NULL,
+  continuousplot = FALSE,
   clusterplot = FALSE,
   largetreearea = FALSE,
   stockedland = TRUE,
@@ -26,9 +27,11 @@ diversity_nfi(
 
 \item{basal}{: A logical flag (default FALSE); if TRUE, calculates tree diversity using basal area. If FALSE, uses number of individuals. Only applicable when \code{table = "tree"}.}
 
+\item{byplot}{: A logical flag (default FALSE); if TRUE, calculates statistics for each plot separately. If FALSE, calculates for the entire dataset.}
+
 \item{plotgrp}{: A character vector; specifies variables from 'plot' table to use for grouping. Use \code{c()} to combine multiple variables.}
 
-\item{byplot}{: A logical flag (default FALSE); if TRUE, calculates statistics for each plot separately. If FALSE, calculates for the entire dataset.}
+\item{continuousplot}{: A logical flag (default TRUE); if TRUE, includes only plots that have been continuously measured in all NFI cycles (5th, 6th, etc.). If FALSE, includes plots regardless of missing cycle measurements.}
 
 \item{clusterplot}{: A logical flag (default FALSE); if TRUE, treats each cluster plot as a single unit. If FALSE, calculates for each subplot separately.}
 
@@ -72,10 +75,12 @@ The 'herb', 'veg', and 'sapling' tables may contain a lot of errors, so use caut
 data("nfi_donghae")
 
 # Calculate tree diversity indices using basal area
-tree_ba_diversity <- diversity_nfi(nfi_donghae, sp = "SP", table = "tree", basal = TRUE)
+tree_ba_diversity <- diversity_nfi(nfi_donghae, sp = "SP", table = "tree", 
+                                    basal = TRUE, continuousplot = TRUE)
 
 # Calculate tree diversity indices using number of individuals
-tree_indi_diversity <- diversity_nfi(nfi_donghae, sp = "SP", table = "tree", basal = FALSE)
+tree_indi_diversity <- diversity_nfi(nfi_donghae, sp = "SP", table = "tree", 
+                                      basal = FALSE, continuousplot = TRUE)
 
 }
 \references{

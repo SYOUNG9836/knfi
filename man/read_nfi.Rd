@@ -4,7 +4,13 @@
 \alias{read_nfi}
 \title{Read Korean National Forest Inventory}
 \usage{
-read_nfi(dir, district = NULL, tables = c("tree", "cwd"))
+read_nfi(
+  dir,
+  district = NULL,
+  tables = c("tree", "cwd"),
+  pattern = "xlsx",
+  ...
+)
 }
 \arguments{
 \item{dir}{: A character vector; The directory containing NFI files.}
@@ -12,6 +18,10 @@ read_nfi(dir, district = NULL, tables = c("tree", "cwd"))
 \item{district}{: A character vector; The district names in Korean (sido, sigungu, or eupmyondong levels). If \code{NULL}, the entire dataset is loaded. Combine multiple districts using \code{c()}.}
 
 \item{tables}{: A character vector; tables to import. Options: 'tree', 'cwd', 'stump', 'sapling', 'veg', 'herb', 'soil'. Combine multiple tables using \code{c()}. e.g., \code{c('tree', 'cwd', 'stump', 'sapling', 'veg', 'herb', 'soil')}.}
+
+\item{pattern}{: A character vector; (default "xlsx"); file pattern to match when loading NFI files. Use regular expressions to filter specific files (e.g., "NFI5.*xlsx" for 5th NFI files only)}
+
+\item{...}{: Additional arguments to be passed to \code{list.files()}}
 }
 \value{
 A \code{data.frame}; the processed NFI data, structured for easy analysis.
@@ -20,6 +30,7 @@ A \code{data.frame}; the processed NFI data, structured for easy analysis.
 read_nfi() function reads and processes the Korean National Forest Inventory (NFI).
 It loads annual NFI files from a local computer, transforms the data into an analysis-friendly format, and performs data integrity verification.
 Users can specify districts and tables to load.
+When loading data from the original NFI Excel files, the function will automatically handle the translation of Korean column names to English - no manual translation is required.
 NFI data can be downloaded from \url{https://kfss.forest.go.kr/stat/}.
 }
 \details{
@@ -63,7 +74,7 @@ To manually download subsets of the annual NFI file, visit the Korea Forest Serv
 -The 6th National Forest Inventory file: \url{https://kfss.forest.go.kr/stat/ptl/article/articleFileDown.do?fileSeq=2996&workSeq=2204}
 -The 7th National Forest Inventory file: \url{https://kfss.forest.go.kr/stat/ptl/article/articleFileDown.do?fileSeq=2997&workSeq=2205}
 
-Use \code{data("col_name")} to view the Korean and English names of the column names.
+Use \code{data("nfi_col")} to view the Korean and English names of the column names.
 
 While the National Forest Inventory undergoes rigorous quality control, including internal reviews  and field inspections, errors may still exist due to the extensive nature of the survey (approximately 4,000 plots and over 70 items in the 7th phase).
 Please use the data cautiously and report any anomalies to help improve our algorithms.
@@ -79,7 +90,7 @@ If you want to read the saved data back, use the code below:
 \examples{
 \donttest{
  # Load tree and CWD data for all districts
- nfi5_data <- read_nfi("D:/NFI/NFI5", district = NULL, tables = c("tree", "cwd"))
+ nfi5_data <- read_nfi("D:/NFI/", district = NULL, tables = c("tree", "cwd"), recursive = TRUE)
 }
 
 }

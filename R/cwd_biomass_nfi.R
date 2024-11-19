@@ -31,7 +31,7 @@ cwd_bm_df <- function(data){
   ))
   
   
-  output <- left_join(output, cwd_bio_coeff, by= c("species_bm" ="SPCD", "DECAYCD" = "decay_class"))
+  output <- left_join(output, cwd_bio_coeff[,-1], by= c("species_bm" ="SPCD", "DECAYCD" = "decay_class"))
   
   ## Calculating biomass--------------------------------------------------------------
   ## species(Decay class) ~ Volume*(Wood density)*(Carbon fraction)-------------------------------
@@ -69,6 +69,7 @@ cwd_bm_df <- function(data){
 #' @param byplot :  A logical flag (default FALSE); if TRUE, calculates statistics for each plot separately. If FALSE, calculates for the entire dataset.
 #' @param plotgrp : A character vector; variables from 'plot' tables for grouping. Use \code{c()} to combine multiple variables.
 #' @param treegrp : A character vector; variables from 'tree' tables for grouping. Use \code{c()} to combine multiple variables.
+#' @param continuousplot : A logical flag (default TRUE); if TRUE, includes only plots that have been continuously measured in all NFI cycles (5th, 6th, etc.). If FALSE, includes plots regardless of missing cycle measurements.
 #' @param strat : A character vector; the variable used for post-stratification. In the National Forest Inventory of Korea, it is typically used by forest type.
 #' @param stockedland : A logical flag (default TRUE); if TRUE, includes only stocked land. If FALSE, includes all land types.
 #' 
@@ -87,10 +88,10 @@ cwd_bm_df <- function(data){
 #' data("nfi_donghae")
 #' 
 #' # Basic usage
-#' cwd <- cwd_biomass_nfi(nfi_donghae)
+#' cwd <- cwd_biomass_nfi(nfi_donghae, continuousplot = TRUE)
 #' 
 #' # Calculate CWD biomass grouped by administrative district and decay class
-#' cwd_grp <- cwd_biomass_nfi(nfi_donghae, plotgrp = "SGG", treegrp = "DECAY")
+#' cwd_grp <- cwd_biomass_nfi(nfi_donghae, plotgrp = "SGG", treegrp = "DECAY", continuousplot = TRUE)
 #' 
 #' # Calculate CWD biomass for each plot
 #' plot_biomass <- cwd_biomass_nfi(nfi_donghae, byplot = TRUE)
@@ -102,9 +103,9 @@ cwd_bm_df <- function(data){
 #' @export 
 
 
-cwd_biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp=NULL, strat="FORTYP_SUB", stockedland=TRUE){
+cwd_biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp=NULL, continuousplot=FALSE, strat="FORTYP_SUB", stockedland=TRUE){
   
-  
+
   ## error message-------------------------------------------------------------- 
   required_names <- c("plot", "cwd")
   
@@ -155,6 +156,24 @@ cwd_biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp=NULL, str
   if (stockedland){ 
     data <- filter_nfi(data, c("plot$LAND_USECD == '1'"))
   }
+  data$plot <- data$plot %>% filter(grepl("1$", SUB_PLOT))
+  if ("FORTYP_SUB" %in% names(data$plot)) {
+    data$plot <- data$plot %>% filter(!is.na(FORTYP_SUB))
+  }
+  
+  if(continuousplot){
+    
+    all_cycle <- unique(data$plot$CYCLE)
+    samples_with_all_cycle <- data$plot %>%
+      filter(!is.na(FORTYP_SUB)) %>%
+      group_by(SUB_PLOT) %>%
+      filter(all(all_cycle %in% CYCLE)) %>%
+      distinct(SUB_PLOT) %>%
+      pull(SUB_PLOT)
+    
+    data <- filter_nfi(data, c("plot$SUB_PLOT %in% samples_with_all_cycle"))
+    
+  }
 
   df <- left_join(data$cwd[, c('CLST_PLOT', 'SUB_PLOT',"CYCLE", 'SP', 'SPCD','DECAYCD', 
                                 'CONDEC_CLASS_CD', 'VOL', treegrp)], 
@@ -180,7 +199,7 @@ cwd_biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp=NULL, str
     strat <- NULL
   }
   
-  
+
   # 1. CWD Biomass calculation by subplot
   bm_temp <- df %>% 
     group_by(CYCLE, !!plot_id, INVYR, !!strat, !!!plotgrp, !!!treegrp, tree_area) %>% 
@@ -412,6 +431,10 @@ cwd_biomass_tsvis <- function(data, plotgrp=NULL, treegrp=NULL, strat="FORTYP_SU
   ## Preprocessing-------------------------------------------------------------- 
   if (stockedland){ 
     data <- filter_nfi(data, c("plot$LAND_USECD == '1'"))
+  }
+  data$plot <- data$plot %>% filter(grepl("1$", SUB_PLOT))
+  if ("FORTYP_SUB" %in% names(data$plot)) {
+    data$plot <- data$plot %>% filter(!is.na(FORTYP_SUB))
   }
   
   df <- left_join(data$cwd[, c('CLST_PLOT', 'SUB_PLOT',"CYCLE", 'SP', 'SPCD', 'DECAYCD', 

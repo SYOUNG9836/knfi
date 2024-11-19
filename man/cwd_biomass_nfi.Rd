@@ -9,6 +9,7 @@ cwd_biomass_nfi(
   byplot = FALSE,
   plotgrp = NULL,
   treegrp = NULL,
+  continuousplot = FALSE,
   strat = "FORTYP_SUB",
   stockedland = TRUE
 )
@@ -21,6 +22,8 @@ cwd_biomass_nfi(
 \item{plotgrp}{: A character vector; variables from 'plot' tables for grouping. Use \code{c()} to combine multiple variables.}
 
 \item{treegrp}{: A character vector; variables from 'tree' tables for grouping. Use \code{c()} to combine multiple variables.}
+
+\item{continuousplot}{: A logical flag (default TRUE); if TRUE, includes only plots that have been continuously measured in all NFI cycles (5th, 6th, etc.). If FALSE, includes plots regardless of missing cycle measurements.}
 
 \item{strat}{: A character vector; the variable used for post-stratification. In the National Forest Inventory of Korea, it is typically used by forest type.}
 
@@ -59,10 +62,10 @@ It is important to check the RSE and other statistical measures in the biomass r
 data("nfi_donghae")
 
 # Basic usage
-cwd <- cwd_biomass_nfi(nfi_donghae)
+cwd <- cwd_biomass_nfi(nfi_donghae, continuousplot = TRUE)
 
 # Calculate CWD biomass grouped by administrative district and decay class
-cwd_grp <- cwd_biomass_nfi(nfi_donghae, plotgrp = "SGG", treegrp = "DECAY")
+cwd_grp <- cwd_biomass_nfi(nfi_donghae, plotgrp = "SGG", treegrp = "DECAY", continuousplot = TRUE)
 
 # Calculate CWD biomass for each plot
 plot_biomass <- cwd_biomass_nfi(nfi_donghae, byplot = TRUE)

@@ -17,7 +17,7 @@ The \code{switchcol_nfi()} function allows switching between the original Korean
 If the input data has English column names, it changes them to the original Korean names, and vice versa.
 }
 \details{
-Important: Data with original Korean column names cannot be used with any \code{\link{read_nfi}} functions except \code{colchange_nfi()} itself.
+Important: Data with original Korean column names cannot be used with any \code{\link{read_nfi}} functions except \code{switchcol_nfi()} itself.
 The option to revert to original Korean names is provided solely for users who wish to store or process the NFI data with original column names.
 }
 \examples{

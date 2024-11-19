@@ -10,7 +10,9 @@ tsvis_nfi(
   bm_type = NULL,
   output = "line",
   plotgrp = NULL,
+  treegrp = NULL,
   isannual = TRUE,
+  continuousplot = FALSE,
   admin = NULL,
   strat = "FORTYP_SUB",
   clusterplot = FALSE,
@@ -18,7 +20,10 @@ tsvis_nfi(
   stockedland = TRUE,
   talltree = TRUE,
   sp = "SP",
-  frequency = TRUE
+  frequency = TRUE,
+  ncol = NULL,
+  nrow = NULL,
+  top = 20
 )
 }
 \arguments{
@@ -32,7 +37,11 @@ tsvis_nfi(
 
 \item{plotgrp}{: A character vector; specifies variables from the 'plot' table to use for grouping. Use \code{c()} to combine multiple variables, but if the output is a map, line or bar plot, only one variable can be used.}
 
+\item{treegrp}{: A character vector; variables from 'tree' tables for grouping. Use \code{c()} to combine multiple variables.}
+
 \item{isannual}{: A logical flag (default TRUE); if TRUE, the result is provided annually, if FALSE, it is provided in 5-year intervals.}
+
+\item{continuousplot}{: A logical flag (default TRUE); if TRUE, includes only plots that have been continuously measured in all NFI cycles (5th, 6th, etc.). If FALSE, includes plots regardless of missing cycle measurements.}
 
 \item{admin}{: A character vector; the administrative unit for visualizing 'biomass' or 'cwd' as a map. Must be one of 'sido', 'sgg', 'emg'.}
 
@@ -49,6 +58,12 @@ tsvis_nfi(
 \item{sp}{: A character vector; the column name of species information (e.g., "SP" for species, "GENUS" for genus-level analysis).}
 
 \item{frequency}{: A logical flag (default TRUE); if TRUE, includes frequency in importance value calculations.}
+
+\item{ncol}{: A numeric vector (default NULL); Number of columns in the grid layout when faceting by \var{plotgrp}.}
+
+\item{nrow}{: A numeric vector (default NULL); Number of columns in the grid layout when faceting by \var{plotgrp}.}
+
+\item{top}{: A numeric vector (default 20); Number of top species to display in 'iv' plot}
 }
 \value{
 If the output is a map, line, or bar plot: an object of class \pkg{ggplot}.
@@ -59,6 +74,15 @@ tsvis_nfi() function analyzes and visualizes data in a time series format. It ca
 Users need to select the specific biomass variable, such as volume or carbon to visualize biomass.
 For map visualization of biomass, users must choose the administrative unit level.
 It uses the \code{\link{iv_nfi}} and \code{\link{biomass_nfi}} and \code{\link{cwd_biomass_nfi}} function for core calculations.
+The function accepts various parameters depending on the analysis type:
+Common parameters: data, y, output, plotgrp, isannual, ncol, nrow
+Additional parameters by type:
+biomass: bm_type(except for 'table'), admin(only 'map'), treegrp, strat, stockedland, talltree, clusterplot, largetreearea
+cwd: bm_type(except for 'table'), admin(only 'map'), treegrp, strat, stockedland
+iv: sp, frequency, top
+When y is set to either 'biomass' or 'cwd':
+For map output, the function displays two side-by-side spatial visualizations: one showing the results and another showing the relative standard error (RSE).
+For line or bar outputs, results are displayed with error bars based on the standard error (SE) of the estimates.
 }
 \note{
 To visualize data as a map, you need to agree to install the \code{kadmin} package during the function execution or install it in advance.
@@ -70,19 +94,20 @@ Use \verb{drat::addRepo("SYOUNG9836") install.packages("kadmin")} or \code{remot
 data("nfi_donghae")
 
 # Visualize importance values as a table
-tsvis_iv <- tsvis_nfi(nfi_donghae, y = "iv", output = "table")
+tsvis_iv <- tsvis_nfi(nfi_donghae, y = "iv", output = "table", continuousplot = TRUE)
 
 # Create a bar plot of importance values at 5-year intervals
-tsvis_iv_bar <- tsvis_nfi(nfi_donghae, y = "iv", output = "bar", isannual = FALSE)
+tsvis_iv_bar <- tsvis_nfi(nfi_donghae, y = "iv", output = "bar", isannual = FALSE, 
+                            continuousplot = TRUE)
 
 # Generate a line plot of carbon biomass over time, grouped by age class
-tsvis_bm_line <- tsvis_nfi(nfi_donghae, y = "biomass", 
-                            bm_type = "carbon", output = "line", plotgrp = "AGE_CLS")
+tsvis_bm_line <- tsvis_nfi(nfi_donghae, y = "biomass", top = 10, bm_type = "carbon", 
+                            output = "line", plotgrp = "AGE_CLS", continuousplot = TRUE)
                             
 \donttest{
 # Create a map of volume at the sido level
 tsvis_bm_map <- tsvis_nfi(nfi_donghae, admin = "sido", 
-                           y = "biomass", bm_type = "volume", output = "map")
+                           y = "biomass", bm_type = "volume", output = "map", continuousplot = TRUE)
 }
 
 

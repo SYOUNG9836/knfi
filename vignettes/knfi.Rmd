@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 library(knfi)
 
 # Load tree and CWD data for all districts
-nfi5_data <- read_nfi("D:/NFI/NFI5", district = NULL, tables = c("tree", "cwd"))
+nfi5_data <- read_nfi("D:/NFI/NFI5", district = NULL, tables = c("tree", "cwd"), recursive = TRUE)
 
 # Applying hierarchical filtering to select only privately owned forest subplots.
 # Ensures all child tables' subplots match the filtered plot table's subplots.
@@ -33,32 +33,37 @@ nfi5_data_kor <- switchcol_nfi(nfi5_data)
 ```{r calculate}
 library(knfi)
 
+# The Korean and English names of the column names
+data("nfi_col")
+
+# National Forest Inventory data for Donghae-si, Gangwon-do, Republic of Korea for testing the function
 data("nfi_donghae")
 
 # calculates comprehensive descriptive statistics for study area
-summary_stats <- summary_nfi(nfi_donghae)
+summary_stats <- summary_nfi(nfi_donghae, continuousplot = T)
 
 # Calculate importance values using genus
-importance_genus <- iv_nfi(nfi_donghae, sp = "GENUS")
+importance_genus <- iv_nfi(nfi_donghae, sp = "GENUS", continuousplot = T)
 
 # Calculate tree diversity indices using basal area
-diversity_tree_ba <- diversity_nfi(nfi_donghae, sp = "SP", table = "tree", basal = TRUE)
+diversity_tree_ba <- diversity_nfi(nfi_donghae, sp = "SP", table = "tree", basal = TRUE, continuousplot = T)
 
 # Calculate biomass by administrative district
-biomass_district <- biomass_nfi(nfi_donghae, plotgrp = "SGG")
+biomass_district <- biomass_nfi(nfi_donghae, plotgrp = "SGG", continuousplot = T)
 
 # Calculate CWD biomass grouped by administrative district and decay class
-cwd_grpby <- cwd_biomass_nfi(nfi_donghae, plotgrp = "SGG", treegrp = "DECAY")
+cwd_grpby <- cwd_biomass_nfi(nfi_donghae, plotgrp = "SGG", treegrp = "DECAY", continuousplot = T)
 
 # Create a bar plot of importance values at 5-year intervals
-tsvis_iv_bar <- tsvis_nfi(nfi_donghae, y = "iv", output = "bar", isannual = FALSE)
+tsvis_iv_bar <- tsvis_nfi(nfi_donghae, y = "iv", output = "bar", isannual = FALSE, continuousplot = T)
 
 # Generate a line plot of carbon biomass over time
-tsvis_bm_line <- tsvis_nfi(nfi_donghae, y = "biomass", 
+tsvis_bm_line <- tsvis_nfi(nfi_donghae, y = "biomass", continuousplot = T, 
                             bm_type = "carbon", output = "line")
 
 # # Create a map of volume at the sido level
-# tsvis_bm_map <- tsvis_nfi(nfi_donghae, admin = "sido", 
+# remotes::install_github("SYOUNG9836/kadmin")
+# tsvis_bm_map <- tsvis_nfi(nfi_donghae, admin = "sido", continuousplot = T, 
 #                            y = "biomass", bm_type = "volume", output = "map")
                            
 

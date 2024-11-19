@@ -17,6 +17,7 @@
 #' @param sp :A character vector; the column name of species information (e.g., "SP" for species, "GENUS" for genus-level analysis).
 #' @param frequency : A logical flag (default TRUE); if TRUE, includes frequency in importance value calculations.
 #' @param plotgrp : A character vector; specifies variables from 'plot' table to use for grouping. Use \code{c()} to combine multiple variables.
+#' @param continuousplot : A logical flag (default TRUE); if TRUE, includes only plots that have been continuously measured in all NFI cycles (5th, 6th, etc.). If FALSE, includes plots regardless of missing cycle measurements.
 #' @param clusterplot : A logical flag (default FALSE); if TRUE, treats each cluster plot as a single unit. If FALSE, calculates for each subplot separately.
 #' @param largetreearea : A logical flag (default FALSE); if TRUE, includes large tree survey plots in the analysis. If FALSE, only uses standard tree plots.
 #' @param stockedland : A logical flag (default TRUE); if TRUE, includes only stocked land. If FALSE, includes all land types.
@@ -33,10 +34,10 @@
 #' data("nfi_donghae")
 #
 #' # Calculate importance values without frequency
-#' importance <- iv_nfi(nfi_donghae, sp = "SP", frequency = FALSE)
+#' importance <- iv_nfi(nfi_donghae, sp = "SP", frequency = FALSE, continuousplot = TRUE)
 #' 
 #' # Calculate importance values using genus
-#' genus_importance <- iv_nfi(nfi_donghae, sp = "GENUS")
+#' genus_importance <- iv_nfi(nfi_donghae, sp = "GENUS", continuousplot = TRUE)
 #' 
 #' @seealso
 #' \code{\link[BiodiversityR]{importancevalue}} for calculating the importance values.
@@ -49,7 +50,7 @@
 
 ##  
 
-iv_nfi <- function(data, sp="SP", plotgrp=NULL, frequency=TRUE, clusterplot=FALSE, largetreearea=FALSE, stockedland=TRUE, talltree=TRUE){
+iv_nfi <- function(data, sp="SP", frequency=TRUE, plotgrp=NULL, continuousplot=FALSE, clusterplot=FALSE, largetreearea=FALSE, stockedland=TRUE, talltree=TRUE){
   
   ## error message-------------------------------------------------------------- 
   required_names <- c("plot", "tree")
@@ -63,17 +64,37 @@ iv_nfi <- function(data, sp="SP", plotgrp=NULL, frequency=TRUE, clusterplot=FALS
     stop(paste0("param 'sp': ", sp," is not a column name in the 'tree' data frame."))
   } 
   
-  ## Preprocessing--------------------------------------------------------------
-  if (stockedland){ 
-    data <- filter_nfi(data, c("plot$LAND_USECD == '1'"))
+  if (clusterplot){
+    if(!is.null(plotgrp) && plotgrp=="FORTYP_SUB"){
+      stop("When the param 'clusterplot' is set to TRUE, param 'plotgrp' uses FORTYP_CLST (the forest type for the cluster plot) instead of FORTYP_SUB (the forest type for each subplot).")
+    }
   }
   
+  ## Preprocessing--------------------------------------------------------------
+  if (stockedland){
+    data <- filter_nfi(data, c("plot$LAND_USECD == '1'"))
+  }
+
   if(talltree){
     data$tree <- data$tree %>% filter(WDY_PLNTS_TYP_CD == "1")
   }
-  
+
   if(!largetreearea){ 
     data$tree <- data$tree %>% filter(LARGEP_TREE == "0")
+  }
+  
+  
+  if(continuousplot){
+    
+    all_cycle <- unique(data$plot$CYCLE)
+    samples_with_all_cycle <- data$tree %>%
+      group_by(SUB_PLOT) %>%
+      filter(all(all_cycle %in% CYCLE)) %>%
+      distinct(SUB_PLOT) %>%
+      pull(SUB_PLOT)
+    
+    data <- filter_nfi(data, c("plot$SUB_PLOT %in% samples_with_all_cycle"))
+
   }
  
   df <- left_join(data$tree[, c('CLST_PLOT', 'SUB_PLOT',"CYCLE", 'WDY_PLNTS_TYP_CD', 
@@ -192,7 +213,7 @@ iv_nfi <- function(data, sp="SP", plotgrp=NULL, frequency=TRUE, clusterplot=FALS
 
 
 
-iv_tsvis <- function(data, sp="SP", plotgrp=NULL , frequency=TRUE , clusterplot=FALSE, largetreearea=FALSE, stockedland=TRUE, talltree=TRUE){
+iv_tsvis <- function(data, sp="SP", frequency=TRUE, plotgrp=NULL, clusterplot=FALSE, largetreearea=FALSE, stockedland=TRUE, talltree=TRUE){
   
   ## error message-------------------------------------------------------------- 
   required_names <- c("plot", "tree")
@@ -206,8 +227,14 @@ iv_tsvis <- function(data, sp="SP", plotgrp=NULL , frequency=TRUE , clusterplot=
     stop(paste0("param 'sp': ", sp," is not a column name in the 'tree' data frame."))
   } 
   
+  if (clusterplot){
+    if(!is.null(plotgrp) && plotgrp=="FORTYP_SUB"){
+      stop("When the param 'clusterplot' is set to TRUE, param 'plotgrp' uses FORTYP_CLST (the forest type for the cluster plot) instead of FORTYP_SUB (the forest type for each subplot).")
+    }
+  }
+  
   ## Preprocessing--------------------------------------------------------------
-  if (stockedland){ 
+  if (stockedland){
     data <- filter_nfi(data, c("plot$LAND_USECD == '1'"))
   }
   
@@ -219,48 +246,47 @@ iv_tsvis <- function(data, sp="SP", plotgrp=NULL , frequency=TRUE , clusterplot=
     data$tree <- data$tree %>% filter(LARGEP_TREE == "0")
   }
   
-  
-  df <- left_join(data$tree[, c('CLST_PLOT', 'SUB_PLOT',"CYCLE", 'WDY_PLNTS_TYP_CD', 
-                                'BASAL_AREA', 'LARGEP_TREE', sp)], 
+  df <- left_join(data$tree[, c('CLST_PLOT', 'SUB_PLOT',"CYCLE", 'WDY_PLNTS_TYP_CD',
+                                'BASAL_AREA', 'LARGEP_TREE', sp)],
                   data$plot[,c('CLST_PLOT', 'SUB_PLOT', "CYCLE", 'INVYR','LAND_USE', "LAND_USECD", plotgrp)],
                   by = c("CLST_PLOT", "SUB_PLOT", "CYCLE"))
-  
+
   sp<- rlang::sym(sp)
   plotgrp<- rlang::syms(plotgrp)
-  
+
   if(clusterplot){
-    iv_temp <- df %>% 
-      group_by(CLST_PLOT , !!sp, !!!plotgrp) %>% 
+    iv_temp <- df %>%
+      group_by(CLST_PLOT , !!sp, !!!plotgrp) %>%
       summarise(count = n(), basal = sum(BASAL_AREA, na.rm=TRUE),.groups = 'drop')
     plot_id <- c('CLST_PLOT')
-    
+
   }else{
-    iv_temp <- df %>% 
-      group_by(SUB_PLOT , !!sp, !!!plotgrp) %>% 
+    iv_temp <- df %>%
+      group_by(SUB_PLOT , !!sp, !!!plotgrp) %>%
       summarise(count = n(), basal = sum(BASAL_AREA, na.rm=TRUE),.groups = 'drop')
     plot_id <- c('SUB_PLOT')
-    
+
   }
-  
+
   plot_id  <- rlang::sym(plot_id)
-  
+
   iv_temp <- data.frame(iv_temp)
-  
+
   plotgrp_nm <- as.character(unlist(lapply(plotgrp, quo_name)))
-  
+
   if(length(plotgrp) > 0){
     iv_temp$factor <- apply(iv_temp[plotgrp_nm], 1, function(row) paste(row, collapse = "_"))
   }else{
     iv_temp$factor <- "forest"
   }
-  
+
   ## Calculating importance Value by survey cycle--------------------------------------------------------------
-  iv_temp_2 <-BiodiversityR::importancevalue.comp(iv_temp, site=quo_name(plot_id), species=quo_name(sp), count='count', 
+  iv_temp_2 <-BiodiversityR::importancevalue.comp(iv_temp, site=quo_name(plot_id), species=quo_name(sp), count='count',
                                                  basal='basal', factor="factor")
-  
-  
+
+
   for(i in 2:length(iv_temp_2)){
-    
+
     if(is.null(dim(iv_temp_2[[i]]))){
       iv_temp_2[[i]] <- as.data.frame(iv_temp_2[[i]])
       colnm_temp <- rownames(iv_temp_2[[i]])
@@ -269,16 +295,16 @@ iv_tsvis <- function(data, sp="SP", plotgrp=NULL , frequency=TRUE , clusterplot=
       rownames(iv_temp_2[[i]]) <- NULL
       iv_temp_2[[i]] <- as.data.frame(iv_temp_2[[i]])
       iv_temp_2[[i]]$species <- iv_temp$SP[iv_temp$factor ==iv_temp_2[[1]][i-1]][1]
-      
+
     }else{
-      
+
       iv_temp_2[[i]] <- as.data.frame(iv_temp_2[[i]])
       iv_temp_2[[i]]$species <- rownames(iv_temp_2[[i]])
       rownames(iv_temp_2[[i]]) <- NULL
-      
+
     }
-    
-    
+
+
     if(length(plotgrp) >0){
       for(j in 1:length(as.character(unlist(lapply(plotgrp, quo_name))))){
         ivcol <- as.character(unlist(lapply(plotgrp, quo_name)))[j]
@@ -286,27 +312,27 @@ iv_tsvis <- function(data, sp="SP", plotgrp=NULL , frequency=TRUE , clusterplot=
       }
     }
   }
-  
+
   iv_temp_2[[1]] <- NULL
-  
+
   iv <- data.table::rbindlist(iv_temp_2, fill=TRUE, use.names=TRUE)
-  
-  iv  <- as.data.frame(iv) 
+
+  iv  <- as.data.frame(iv)
   rownames(iv) <- NULL
-  
-  
-  ## Inclusion of frequency-------------------------------------------------------------- 
+
+
+  ## Inclusion of frequency--------------------------------------------------------------
   if(frequency){
     iv$importance.value <- iv$importance.value/3
   }else{
-    
+
     iv$importance.value <- (iv$density.percent + iv$dominance.percent)/2
     iv$frequency <- NULL
     iv$frequency.percent <- NULL
   }
-  
+
   iv <- iv[, c("species", setdiff(names(iv), "species"))]
-  
+
   return(iv)
   
 }

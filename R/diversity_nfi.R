@@ -22,6 +22,7 @@
 #' @param basal : A logical flag (default FALSE); if TRUE, calculates tree diversity using basal area. If FALSE, uses number of individuals. Only applicable when `table = "tree"`.
 #' @param byplot : A logical flag (default FALSE); if TRUE, calculates statistics for each plot separately. If FALSE, calculates for the entire dataset.
 #' @param plotgrp : A character vector; specifies variables from 'plot' table to use for grouping. Use \code{c()} to combine multiple variables.
+#' @param continuousplot : A logical flag (default TRUE); if TRUE, includes only plots that have been continuously measured in all NFI cycles (5th, 6th, etc.). If FALSE, includes plots regardless of missing cycle measurements.
 #' @param clusterplot : A logical flag (default FALSE); if TRUE, treats each cluster plot as a single unit. If FALSE, calculates for each subplot separately.
 #' @param largetreearea : A logical flag (default FALSE); if TRUE, includes large tree survey plots in the analysis. If FALSE, only uses standard tree plots.
 #' @param stockedland : A logical flag (default TRUE); if TRUE, includes only stocked land. If FALSE, includes all land types.
@@ -40,10 +41,12 @@
 #' data("nfi_donghae")
 #' 
 #' # Calculate tree diversity indices using basal area
-#' tree_ba_diversity <- diversity_nfi(nfi_donghae, sp = "SP", table = "tree", basal = TRUE)
+#' tree_ba_diversity <- diversity_nfi(nfi_donghae, sp = "SP", table = "tree", 
+#'                                     basal = TRUE, continuousplot = TRUE)
 #' 
 #' # Calculate tree diversity indices using number of individuals
-#' tree_indi_diversity <- diversity_nfi(nfi_donghae, sp = "SP", table = "tree", basal = FALSE)
+#' tree_indi_diversity <- diversity_nfi(nfi_donghae, sp = "SP", table = "tree", 
+#'                                       basal = FALSE, continuousplot = TRUE)
 #' 
 #' @seealso
 #' \code{\link[vegan]{diversity}} for calculating the Shannon and Simpson diversity indices.
@@ -58,7 +61,7 @@
 
 ##  
 
-diversity_nfi <- function(data, sp="SP", table="tree", basal=FALSE, plotgrp=NULL, byplot=FALSE, clusterplot=FALSE, largetreearea=FALSE, stockedland=TRUE, talltree=TRUE){
+diversity_nfi <- function(data, sp="SP", table="tree", basal=FALSE, byplot=FALSE, plotgrp=NULL, continuousplot=FALSE, clusterplot=FALSE, largetreearea=FALSE, stockedland=TRUE, talltree=TRUE){
   
   ## error message-------------------------------------------------------------- 
   if(!table %in%  c('tree', 'herb', 'veg', 'sapling')){
@@ -79,6 +82,12 @@ diversity_nfi <- function(data, sp="SP", table="tree", basal=FALSE, plotgrp=NULL
     }
     if(any(!plotgrp %in% names(data$plot))){
       stop(paste0("param 'plotgrp': ", plotgrp," is not a column name in the 'plot' data frame."))
+    }
+  }
+  
+  if (clusterplot){
+    if(!is.null(plotgrp) && plotgrp=="FORTYP_SUB"){
+      stop("When the param 'clusterplot' is set to TRUE, param 'plotgrp' uses FORTYP_CLST (the forest type for the cluster plot) instead of FORTYP_SUB (the forest type for each subplot).")
     }
   }
   
@@ -117,6 +126,19 @@ diversity_nfi <- function(data, sp="SP", table="tree", basal=FALSE, plotgrp=NULL
       data$tree <- data$tree %>% filter(LARGEP_TREE == "0")
     }
     
+    if(continuousplot){
+      
+      all_cycle <- unique(data$tree$CYCLE)
+      samples_with_all_cycle <- data$tree %>%
+        group_by(SUB_PLOT) %>%
+        filter(all(all_cycle %in% CYCLE)) %>%
+        distinct(SUB_PLOT) %>%
+        pull(SUB_PLOT)
+      
+      data <- filter_nfi(data, c("plot$SUB_PLOT %in% samples_with_all_cycle"))
+      
+    }
+    
     
     df <- left_join(data$tree[, c('CLST_PLOT', 'SUB_PLOT', "CYCLE", 'WDY_PLNTS_TYP_CD', 
                                   'BASAL_AREA', 'LARGEP_TREE', sp)], 
@@ -126,16 +148,56 @@ diversity_nfi <- function(data, sp="SP", table="tree", basal=FALSE, plotgrp=NULL
     
 
   }else if(table=="herb"){
+    
+    if(continuousplot){
+      
+      all_cycle <- unique(data$herb$CYCLE)
+      samples_with_all_cycle <- data$herb %>%
+        group_by(SUB_PLOT) %>%
+        filter(all(all_cycle %in% CYCLE)) %>%
+        distinct(SUB_PLOT) %>%
+        pull(SUB_PLOT)
+      
+      data <- filter_nfi(data, c("plot$SUB_PLOT %in% samples_with_all_cycle"))
+      
+    }
+    
     df <- left_join(data$herb[, c('CLST_PLOT', 'SUB_PLOT', "CYCLE", sp)], 
                     data$plot[,c('CLST_PLOT', 'SUB_PLOT', "CYCLE", 'INVYR', "LAND_USE", "LAND_USECD", plotgrp)],
                     by = c("CLST_PLOT", "SUB_PLOT", "CYCLE"))
     
   }else if(table=="veg"){
+    
+    if(continuousplot){
+      
+      all_cycle <- unique(data$veg$CYCLE)
+      samples_with_all_cycle <- data$veg %>%
+        group_by(SUB_PLOT) %>%
+        filter(all(all_cycle %in% CYCLE)) %>%
+        distinct(SUB_PLOT) %>%
+        pull(SUB_PLOT)
+      
+      data <- filter_nfi(data, c("plot$SUB_PLOT %in% samples_with_all_cycle"))
+      
+    }
     df <- left_join(data$veg[, c('CLST_PLOT', 'SUB_PLOT', "CYCLE", 'VEGPLOT', 'NUMINDI', sp)], 
                     data$plot[,c('CLST_PLOT', 'SUB_PLOT', "CYCLE", 'INVYR', "LAND_USE", "LAND_USECD", plotgrp)],
                     by = c("CLST_PLOT", "SUB_PLOT", "CYCLE"))
     
   }else if(table=="sapling"){
+    
+    if(continuousplot){
+      
+      all_cycle <- unique(data$sapling$CYCLE)
+      samples_with_all_cycle <- data$sapling %>%
+        group_by(SUB_PLOT) %>%
+        filter(all(all_cycle %in% CYCLE)) %>%
+        distinct(SUB_PLOT) %>%
+        pull(SUB_PLOT)
+      
+      data <- filter_nfi(data, c("plot$SUB_PLOT %in% samples_with_all_cycle"))
+      
+    }
     
     df <- left_join(data$sapling[, c('CLST_PLOT', 'SUB_PLOT', "CYCLE", 'TREECOUNT', sp)], 
                     data$plot[,c('CLST_PLOT', 'SUB_PLOT', "CYCLE", 'INVYR', "LAND_USE", "LAND_USECD", plotgrp)],
