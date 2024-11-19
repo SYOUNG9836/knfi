@@ -4,7 +4,6 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/tidyverse/ggplot2/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/SYOUNG9836/knfi/actions/workflows/R-CMD-check.yaml)
 [![cran version](https://www.r-pkg.org/badges/version/knfi)](https://cran.r-project.org/package=knfi)
 [![rstudio mirror downloads](https://cranlogs.r-pkg.org/badges/knfi?color=E664A4)](https://github.com/r-hub/cranlogs.app)
 
