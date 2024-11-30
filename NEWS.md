@@ -1,3 +1,7 @@
+# knfi 1.0.1.0009
+## Bug fixes
+* Fixed a bug in `biomass_nfi`
+
 # knfi 1.0.1
 ## Bug fixes
 * Fixed a bug in `summary_nfi` and `biomass_nfi` where functions were not working when `largetree_area = FALSE`.

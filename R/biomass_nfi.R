@@ -276,7 +276,7 @@ biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp= NULL, contin
                 tree_area= sum(tree_area, na.rm=TRUE),.groups = 'drop')
 
     bm_temp <- df %>% 
-      group_by(CYCLE, !!plot_id, INVYR, largetree, !!!plotgrp, SP, !!strat) %>% 
+      group_by(CYCLE, !!plot_id, INVYR, largetree, !!!plotgrp, !!!treegrp, !!strat) %>% 
       summarise(volume_m3 = sum(VOL_EST, na.rm=TRUE),
                 biomass_ton = sum(T_biomass, na.rm=TRUE),
                 AG_biomass_ton = sum(AG_biomass, na.rm=TRUE),
