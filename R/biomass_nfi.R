@@ -304,6 +304,7 @@ biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp= NULL, contin
       bm_temp[condition] <- NULL
       bm_temp$tree_area <- NULL
       bm_temp$largetree_area <- NULL
+      bm_temp$largetree <- NULL
       
       
     }else{ # 1.1.2 Biomass calculation by cluster plots including large tree survey plots 
@@ -358,6 +359,7 @@ biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp= NULL, contin
       bm_temp[condition] <- NULL
       bm_temp$tree_area <- NULL
       bm_temp$largetree_area <- NULL
+      bm_temp$largetree <- NULL
       
       
       
