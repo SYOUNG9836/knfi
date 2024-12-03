@@ -1,4 +1,4 @@
-# knfi 1.0.1.0009
+# knfi 1.0.1.9
 ## Bug fixes
 * Fixed a bug in `biomass_nfi`
 

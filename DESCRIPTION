@@ -1,6 +1,6 @@
 Package: knfi
 Title: Analysis of Korean National Forest Inventory Database
-Version: 1.0.1.0009
+Version: 1.0.1.9
 Maintainer: Sinyoung Park <youngsin0306@kookmin.ac.kr>
 Authors@R: 
   c(person(given = "Sinyoung", family = "Park", role = c("aut", "cre"), email = "youngsin0306@kookmin.ac.kr", comment = c(ORCID = "0000-0003-3658-0935")),
@@ -40,6 +40,7 @@ RoxygenNote: 7.3.2
 Additional_repositories: https://SYOUNG9836.github.io/drat
 URL: https://github.com/SYOUNG9836/knfi, https://syoung9836.github.io/knfi/
 BugReports: https://github.com/SYOUNG9836/knfi/issues
+Remotes: kadmin=github::SYOUNG9836/kadmin
 Imports:
     dplyr,
     magrittr,
