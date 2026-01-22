@@ -6,7 +6,6 @@
 #' @import vegan
 #' @import cellranger
 #' @import broom
-#' @import ggplot2
 #' @import sp
 #' @import drat
 #' @import ggpubr

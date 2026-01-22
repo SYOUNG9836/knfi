@@ -64,7 +64,7 @@ This function performs several data integrity validation.
 \item Adds whether a plant is native or cultivated, and identifies if it is a food, medicinal, fiber, or ornamental resource. (col: NATIVE_CULTIVATED, FOOD, MEDICINAL, FIBER, ORNAMENTAL)
 \item Calculates basal area for individual tree (col: BASAL_AREA)
 \item Calculates forest type, dominant species, and dominant species percentage for each subplot and cluster plot. (col: FORTYP_SUB, DOMIN_PERCNT_SUB, DOMIN_SP_SUB, FORTYP_CLST, DOMIN_PERCNT_CLST, DOMIN_SP_CLST)
-Species classification and taxonomy follow the standards set by the Korean Plant Names Index Committee of the Korea National Arboretum \url{http://www.nature.go.kr/kpni/index.do}.
+Species classification and taxonomy follow the standards set by the Korean Plant Names Index Committee of the Korea National Arboretum (http://www.nature.go.kr/kpni/index.do).
 }
 }
 \note{
