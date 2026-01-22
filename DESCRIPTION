@@ -40,7 +40,6 @@ RoxygenNote: 7.3.2
 Additional_repositories: https://SYOUNG9836.github.io/drat
 URL: https://github.com/SYOUNG9836/knfi, https://syoung9836.github.io/knfi/
 BugReports: https://github.com/SYOUNG9836/knfi/issues
-Remotes: kadmin=github::SYOUNG9836/kadmin 
 Imports:
     dplyr,
     magrittr,
