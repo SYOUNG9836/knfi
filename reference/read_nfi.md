@@ -122,7 +122,7 @@ This function performs several data integrity validation.
     DOMIN_PERCNT_SUB, DOMIN_SP_SUB, FORTYP_CLST, DOMIN_PERCNT_CLST,
     DOMIN_SP_CLST) Species classification and taxonomy follow the
     standards set by the Korean Plant Names Index Committee of the Korea
-    National Arboretum <http://www.nature.go.kr/kpni/index.do>.
+    National Arboretum (http://www.nature.go.kr/kpni/index.do).
 
 ## Note
 
