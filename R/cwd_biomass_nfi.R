@@ -69,7 +69,7 @@ cwd_bm_df <- function(data){
 #' @param byplot :  A logical flag (default FALSE); if TRUE, calculates statistics for each plot separately. If FALSE, calculates for the entire dataset.
 #' @param plotgrp : A character vector; variables from 'plot' tables for grouping. Use \code{c()} to combine multiple variables.
 #' @param treegrp : A character vector; variables from 'tree' tables for grouping. Use \code{c()} to combine multiple variables.
-#' @param continuousplot : A logical flag (default TRUE); if TRUE, includes only plots that have been continuously measured in all NFI cycles (5th, 6th, etc.). If FALSE, includes plots regardless of missing cycle measurements.
+#' @param continuousplot : A logical flag (default TRUE); if TRUE, includes only plots that have been measured at the exact same location across all NFI cycles (5th, 6th, etc.). If FALSE, includes all plots regardless of location changes or missing cycle measurements.
 #' @param strat : A character vector; the variable used for post-stratification. In the National Forest Inventory of Korea, it is typically used by forest type.
 #' @param stockedland : A logical flag (default TRUE); if TRUE, includes only stocked land. If FALSE, includes all land types.
 #' 
@@ -163,6 +163,7 @@ cwd_biomass_nfi <- function(data, byplot= FALSE, plotgrp=NULL, treegrp=NULL, con
   
   if(continuousplot){
     
+    data <- filter_nfi(data, 'plot$SUBPTYP != "\\uc704\\uce58\\ubcc0\\uacbd" | is.na(plot$SUBPTYP)')
     all_cycle <- unique(data$plot$CYCLE)
     samples_with_all_cycle <- data$plot %>%
       filter(!is.na(FORTYP_SUB)) %>%

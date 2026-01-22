@@ -1,3 +1,7 @@
+# knfi 1.0.2.0
+## Improvements
+* Replaced masked coordinate values with zeros in LAT/LON columns for spatial mapping (original values retained in LAT_MASKED/LON_MASKED). Actual locations may differ by up to 100m.
+
 # knfi 1.0.1.9
 ## Bug fixes
 * Fixed a bug in `biomass_nfi`

@@ -1,6 +1,6 @@
 Package: knfi
 Title: Analysis of Korean National Forest Inventory Database
-Version: 1.0.1.9
+Version: 1.0.2.0
 Maintainer: Sinyoung Park <youngsin0306@kookmin.ac.kr>
 Authors@R: 
   c(person(given = "Sinyoung", family = "Park", role = c("aut", "cre"), email = "youngsin0306@kookmin.ac.kr", comment = c(ORCID = "0000-0003-3658-0935")),

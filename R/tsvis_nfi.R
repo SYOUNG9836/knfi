@@ -21,9 +21,9 @@
 #' @param output : A character vector; the desired type of visualization. Must be one of 'table', 'line', 'bar', 'map'.
 #' @param plotgrp : A character vector; specifies variables from the 'plot' table to use for grouping. Use \code{c()} to combine multiple variables, but if the output is a map, line or bar plot, only one variable can be used.
 #' @param treegrp : A character vector; variables from 'tree' tables for grouping. Use \code{c()} to combine multiple variables.
-#' @param continuousplot : A logical flag (default TRUE); if TRUE, includes only plots that have been continuously measured in all NFI cycles (5th, 6th, etc.). If FALSE, includes plots regardless of missing cycle measurements.
+#' @param continuousplot : A logical flag (default TRUE); if TRUE, includes only plots that have been measured at the exact same location across all NFI cycles (5th, 6th, etc.). If FALSE, includes all plots regardless of location changes or missing cycle measurements.
 #' @param isannual : A logical flag (default TRUE); if TRUE, the result is provided annually, if FALSE, it is provided in 5-year intervals.
-#' @param admin : A character vector; the administrative unit for visualizing 'biomass' or 'cwd' as a map. Must be one of 'sido', 'sgg', 'emg'.
+#' @param admin : A character vector; the administrative unit for visualizing 'biomass' or 'cwd' as a map. Must be one of 'sido', 'sgg', 'emd'.
 #' @param strat : A character vector; the variable used for post-stratification. In the National Forest Inventory of Korea, it is typically used by forest type.
 #' @param clusterplot : A logical flag (default FALSE); if TRUE, treats each cluster plot as a single unit. If FALSE, calculates for each subplot separately.
 #' @param largetreearea : A logical flag (default FALSE); if TRUE, includes large tree survey plots in the analysis. If FALSE, only uses standard tree plots.
@@ -110,8 +110,8 @@ tsvis_nfi <- function(data, y = "biomass", bm_type = NULL, output ="line", plotg
   
   if(y != "iv" & output == "map"){
     
-    if(!admin %in%  c('sido', 'sgg', 'emg')){
-      stop("param 'admin' must be one of 'sido', 'sgg', 'emg'")
+    if(!admin %in%  c('sido', 'sgg', 'emd')){
+      stop("param 'admin' must be one of 'sido', 'sgg', 'emd'")
     }
     
     admin <- switch(admin,
@@ -176,6 +176,7 @@ tsvis_nfi <- function(data, y = "biomass", bm_type = NULL, output ="line", plotg
   
   if(continuousplot){
     
+    data <- filter_nfi(data, 'plot$SUBPTYP != "\\uc704\\uce58\\ubcc0\\uacbd" | is.na(plot$SUBPTYP)')
     all_cycle <- unique(data$plot$CYCLE)
     samples_with_all_cycle <- data$plot %>%
       filter(!is.na(FORTYP_SUB)) %>%

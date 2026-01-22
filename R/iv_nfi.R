@@ -17,7 +17,7 @@
 #' @param sp :A character vector; the column name of species information (e.g., "SP" for species, "GENUS" for genus-level analysis).
 #' @param frequency : A logical flag (default TRUE); if TRUE, includes frequency in importance value calculations.
 #' @param plotgrp : A character vector; specifies variables from 'plot' table to use for grouping. Use \code{c()} to combine multiple variables.
-#' @param continuousplot : A logical flag (default TRUE); if TRUE, includes only plots that have been continuously measured in all NFI cycles (5th, 6th, etc.). If FALSE, includes plots regardless of missing cycle measurements.
+#' @param continuousplot : A logical flag (default TRUE); if TRUE, includes only plots that have been measured at the exact same location across all NFI cycles (5th, 6th, etc.). If FALSE, includes all plots regardless of location changes or missing cycle measurements.
 #' @param clusterplot : A logical flag (default FALSE); if TRUE, treats each cluster plot as a single unit. If FALSE, calculates for each subplot separately.
 #' @param largetreearea : A logical flag (default FALSE); if TRUE, includes large tree survey plots in the analysis. If FALSE, only uses standard tree plots.
 #' @param stockedland : A logical flag (default TRUE); if TRUE, includes only stocked land. If FALSE, includes all land types.
@@ -86,6 +86,7 @@ iv_nfi <- function(data, sp="SP", frequency=TRUE, plotgrp=NULL, continuousplot=F
   
   if(continuousplot){
     
+    data <- filter_nfi(data, 'plot$SUBPTYP != "\\uc704\\uce58\\ubcc0\\uacbd" | is.na(plot$SUBPTYP)')
     all_cycle <- unique(data$plot$CYCLE)
     samples_with_all_cycle <- data$tree %>%
       group_by(SUB_PLOT) %>%
