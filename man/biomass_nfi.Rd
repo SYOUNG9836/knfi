@@ -26,7 +26,7 @@ biomass_nfi(
 
 \item{treegrp}{: A character vector; variables from 'tree' tables for grouping. Use \code{c()} to combine multiple variables.}
 
-\item{continuousplot}{: A logical flag (default TRUE); if TRUE, includes only plots that have been continuously measured in all NFI cycles (5th, 6th, etc.). If FALSE, includes plots regardless of missing cycle measurements.}
+\item{continuousplot}{: A logical flag (default TRUE); if TRUE, includes only plots that have been measured at the exact same location across all NFI cycles (5th, 6th, etc.). If FALSE, includes all plots regardless of location changes or missing cycle measurements.}
 
 \item{strat}{: A character vector; the variable used for post-stratification. In the National Forest Inventory of Korea, it is typically used by forest type.}
 

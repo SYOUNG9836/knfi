@@ -41,9 +41,9 @@ tsvis_nfi(
 
 \item{isannual}{: A logical flag (default TRUE); if TRUE, the result is provided annually, if FALSE, it is provided in 5-year intervals.}
 
-\item{continuousplot}{: A logical flag (default TRUE); if TRUE, includes only plots that have been continuously measured in all NFI cycles (5th, 6th, etc.). If FALSE, includes plots regardless of missing cycle measurements.}
+\item{continuousplot}{: A logical flag (default TRUE); if TRUE, includes only plots that have been measured at the exact same location across all NFI cycles (5th, 6th, etc.). If FALSE, includes all plots regardless of location changes or missing cycle measurements.}
 
-\item{admin}{: A character vector; the administrative unit for visualizing 'biomass' or 'cwd' as a map. Must be one of 'sido', 'sgg', 'emg'.}
+\item{admin}{: A character vector; the administrative unit for visualizing 'biomass' or 'cwd' as a map. Must be one of 'sido', 'sgg', 'emd'.}
 
 \item{strat}{: A character vector; the variable used for post-stratification. In the National Forest Inventory of Korea, it is typically used by forest type.}
 

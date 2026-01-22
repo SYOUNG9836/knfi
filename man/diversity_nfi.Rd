@@ -31,7 +31,7 @@ diversity_nfi(
 
 \item{plotgrp}{: A character vector; specifies variables from 'plot' table to use for grouping. Use \code{c()} to combine multiple variables.}
 
-\item{continuousplot}{: A logical flag (default TRUE); if TRUE, includes only plots that have been continuously measured in all NFI cycles (5th, 6th, etc.). If FALSE, includes plots regardless of missing cycle measurements.}
+\item{continuousplot}{: A logical flag (default TRUE); if TRUE, includes only plots that have been measured at the exact same location across all NFI cycles (5th, 6th, etc.). If FALSE, includes all plots regardless of location changes or missing cycle measurements.}
 
 \item{clusterplot}{: A logical flag (default FALSE); if TRUE, treats each cluster plot as a single unit. If FALSE, calculates for each subplot separately.}
 

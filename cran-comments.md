@@ -20,9 +20,6 @@ Use drat::addRepo("SYOUNG9836") install.packages("kadmin") or remotes::install_g
 0 errors | 0 warnings | 0 notes
 
 
-
-
-
 ## rhub Status: Success
 
 linux (R-devel)
