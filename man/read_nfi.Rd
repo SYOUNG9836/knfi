@@ -88,7 +88,7 @@ If you want to read the saved data back, use the code below:
 \code{for (sheet_name in sheet_names) {nfi[[sheet_name]] <- readxl::read_excel(path, sheet = sheet_name) }}
 }
 \examples{
-\donttest{
+\dontrun{
  # Load tree and CWD data for all districts
  nfi5_data <- read_nfi("D:/NFI/", district = NULL, tables = c("tree", "cwd"), recursive = TRUE)
 }
