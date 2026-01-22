@@ -159,9 +159,8 @@ If you want to read the saved data back, use the code below:
 ## Examples
 
 ``` r
-# \donttest{
+if (FALSE) { # \dontrun{
  # Load tree and CWD data for all districts
  nfi5_data <- read_nfi("D:/NFI/", district = NULL, tables = c("tree", "cwd"), recursive = TRUE)
-#> Error in read_nfi("D:/NFI/", district = NULL, tables = c("tree", "cwd"),     recursive = TRUE): Directory  D:/NFI/  does not exist.
-# }
+} # }
 ```

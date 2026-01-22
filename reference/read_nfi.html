@@ -15,7 +15,7 @@ NFI data can be downloaded from https://kfss.forest.go.kr/stat/."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">knfi</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -133,11 +133,10 @@ For example, you can use the following code:<code>writexl::write_xlsx(data, "dat
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span> <span class="co"># Load tree and CWD data for all districts</span></span></span>
 <span class="r-in"><span> <span class="va">nfi5_data</span> <span class="op">&lt;-</span> <span class="fu">read_nfi</span><span class="op">(</span><span class="st">"D:/NFI/"</span>, district <span class="op">=</span> <span class="cn">NULL</span>, tables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"tree"</span>, <span class="st">"cwd"</span><span class="op">)</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in read_nfi("D:/NFI/", district = NULL, tables = c("tree", "cwd"),     recursive = TRUE):</span> Directory  D:/NFI/  does not exist.</span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

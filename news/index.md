@@ -1,6 +1,6 @@
 # Changelog
 
-## knfi 1.0.2.0
+## knfi 1.0.2
 
 ### Improvements
 
