@@ -2,3 +2,26 @@ url: https://syoung9836.github.io/knfi/
 template:
   bootstrap: 5
 
+reference:
+  - title: "Data Import & Processing"
+    contents:
+    - read_nfi
+    - filter_nfi
+    - switchcol_nfi
+
+  - title: "Analysis"
+    contents:
+    - summary_nfi
+    - biomass_nfi
+    - cwd_biomass_nfi
+    - diversity_nfi
+    - iv_nfi
+
+  - title: "Visualization"
+    contents:
+    - tsvis_nfi
+
+  - title: "Reference Data"
+    contents:
+    - nfi_col
+    - nfi_donghae
